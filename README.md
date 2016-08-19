@@ -28,7 +28,7 @@ SAINT2 requires three files to generate models:
 
 1. **foo.fasta.txt**: this is a fasta file containing your target sequence.
 
-2. **foo.flib**: this is a fragment library file in the [Flib format]{https://github.com/sauloho/Flib}.  
+2. **foo.flib**: this is a fragment library file in the [Flib format](https://github.com/sauloho/Flib).  
 
 3. **foo.con**: this is a contact file in a minimalistic formatting style. For each predicted contact, this file expects a line in the form of *i j score*, where *i* and *j* are the residues in contact and *score* is the score of the prediction.
 
