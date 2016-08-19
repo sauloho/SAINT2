@@ -1,6 +1,5 @@
 #!/bin/bash
 
-export SAINT2=/homes/oliveira/SAINT2/
 OUTPUT=$1;
 if [ -z "$2" ]; then
     D_PATH=`pwd`;
