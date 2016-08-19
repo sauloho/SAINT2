@@ -1,0 +1,11 @@
+# print the GDT_TS of two PDB files
+# (note that the numbering must be exactly the same; use write_pdb do
+# extract and renumber a single chain from a PDB file)
+
+if [ -z "$SAINT2" ]
+then
+	echo "$0: error: please define environment variable SAINT2" 1>&2
+	exit 1
+fi
+
+$SAINT2/bin/TMscore $1 $2 | awk '/^GDT-TS/ { print $2; }'

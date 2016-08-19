@@ -1,0 +1,15 @@
+
+# run a program and write stdout and stderr to a file
+# (this script is necessary because you cannot say "bsub cmd > file")
+
+if [ $# = 0 ]
+then
+	echo "Usage: $0 outfile command ..." 1>&2
+	exit 1
+fi
+
+out=$1
+shift
+
+$* > $out 2>&1
+

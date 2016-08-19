@@ -1,0 +1,109 @@
+// -*- mode: c++; c-file-style: "ellemtel"; encoding: utf-8; -*-
+//
+// Copyright (C) 2012 Saulo H. P. de Oliveira
+//
+// Saulo H. P. de Oliveira <saulo.deoliveira@pmb.ox.ac.uk>
+// 2012-08-22
+//
+// Score for Contact Information.
+//
+// This score penalizes contacts and anti-contacts that are not satisfied by the model.
+// 
+// 
+
+#include <string>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
+#include <iostream>
+#include <fstream>
+
+#include "peptide.h"
+#include "atom.h"
+#include "scorer_combined.h"
+#include "contact.h"
+
+Contact::Contact()
+{
+}
+
+Contact::~Contact()
+{
+}
+
+void Contact::set_short_data_file(const std::string &filename)
+{
+	m_filename = filename;
+}
+
+void Contact::set_long_data_file(const std::string &filename)
+{
+	m_filename  = filename;
+}
+
+double Contact::score(const Peptide& p, bool verbose) const
+{
+	
+	int i,j,total_len, **A;
+	int len = p.length();
+	double dist, total=0.0;
+	FILE *input_file; 
+	
+	input_file = fopen(m_filename.c_str(),"r");
+	if (input_file == NULL)
+	{
+		std::cerr << "Predicted Contacts File not found!\n";
+		return 0.0;
+	}
+
+	fscanf(input_file,"%d",&total_len);
+
+	A=(int **)malloc(sizeof(int *) * total_len);	
+	for(i=0;i<total_len;i++)
+		A[i]=(int *)malloc(sizeof(int) * total_len);
+
+	for(i=0; i < total_len ; i++)
+		for(j=0; j < total_len ; j++)
+			fscanf(input_file,"%d",&A[i][j]);
+
+	for (i = p.start();i <= p.end();i++)
+		for (j = p.start();j <= p.end() ;j++)
+		{
+			if (i >= total_len || j>= total_len)
+				break;	
+			if (p.atom_exists(i, Atom_CB) && p.atom_exists(j, Atom_CB))
+			{	
+				Point cb_i = p.atom_pos(i, Atom_CB);
+				Point cb_j = p.atom_pos(j, Atom_CB);
+				dist =  cb_i.distance(cb_j);
+
+				if ( A[i][j] && dist > 8.0) /* They are contacts, but are far away in the model! */
+					total += dist - 1.0; 
+
+				/* This would be useful when dealing with anti-contacts. A good idea would be to add this to a completely separate function. */
+				/*else						
+				{
+					if ( !A[i][j] && dist < 8.0 && dist > 1.0 && fabs(i-j) > 5) // They are anti-contacts, but are close together in the model! 
+						total += 1.0;
+				}*/
+			}
+		}	
+
+#ifndef RAW_SCORE
+
+	// Alter the score so that it has about the same distribution
+	// for all lengths
+	total /= sqrt((double) len);
+	// normalise so that all score types have approximately the same range
+	total = total * 28.0 + 50.0;
+	
+#endif // RAW_SCORE
+
+	fclose(input_file);
+	for(i=0;i<total_len;i++)
+		free(A[i]);
+	free(A);
+//	std::cout << "Total = " << total << " !!\n";	
+	return total;
+}
+

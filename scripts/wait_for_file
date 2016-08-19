@@ -1,0 +1,53 @@
+
+# wait until a file or files are created, then run a command
+
+files=
+cmd=
+
+while [ $# -ne 0 ]
+do
+	if [ "$1" = "--" ]
+	then
+		shift
+		cmd="$*"
+		break
+	else
+		files="$files $1"
+		shift
+	fi
+done
+
+if [ -z "$cmd" ]
+then
+echo "Usage: $0 file [ file2 file3 ... ] -- command
+
+Wait until the file(s) are created, then run the command.
+" 1>&2
+exit 1
+fi
+
+ok=0
+
+while :
+do
+	ok=1
+
+	for i in $files
+	do
+		if [ ! -f $i ]
+		then
+			ok=0
+			break
+		fi
+	done
+
+	if [ $ok = 1 ]
+	then
+		break
+	fi
+
+	sleep 10
+done
+
+$cmd
+

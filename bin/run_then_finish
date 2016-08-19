@@ -1,0 +1,12 @@
+
+case $# in
+0) echo "Usage: $0 command
+
+Runs the command, then writes the date to a file called 'finished'" 1>&2
+   exit 1;;
+esac
+
+"$@"
+echo "$*
+`date`" > finished
+

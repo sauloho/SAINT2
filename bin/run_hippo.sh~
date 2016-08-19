@@ -1,0 +1,3 @@
+./run_cotrans2 1 Aqua n ./2d57A2.fasta ./lib_2d57A 10000 1000 2.5 linear
+
+

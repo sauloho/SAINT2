@@ -1,0 +1,15 @@
+
+# count the number of occurences of each line in the input
+
+awk '
+{ t[$0]++; }
+
+END \
+{
+   for (s in t) \
+   {
+      printf "%d\t%s\n", t[s], s;
+   }
+}
+' "$@" | sort -rn
+

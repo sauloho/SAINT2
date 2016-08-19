@@ -1,0 +1,48 @@
+# find the correlation coefficient between the first and second field
+
+awk '
+{
+	if (NF < 2) \
+	{
+		print "'"$0"': Error: line " NR " has less than two fields" | "cat 1>&2";
+		err = 1;
+		exit;
+	}
+
+	x[NR-1] = $1;
+	y[NR-1] = $2;
+	x_total += $1;
+	y_total += $2;
+}
+
+END \
+{
+	if (err) { exit; }
+
+	if (NR == 0) \
+	{
+		print "'"$0"': Error: no data" | "cat 1>&2";
+		exit;
+	}
+
+	x_mean = x_total / (NR + 0.0);
+	y_mean = y_total / (NR + 0.0);
+
+	for (i = 0;i < NR;i++) \
+	{
+		num   += (x[i] - x_mean) * (y[i] - y_mean);
+		x_sum += (x[i] - x_mean) * (x[i] - x_mean);
+		y_sum += (y[i] - y_mean) * (y[i] - y_mean);
+	}
+
+	# printf "num %d  x_sum %g  y_sum %g\n", num, x_sum, y_sum;
+
+	r = num / sqrt (x_sum * y_sum);
+
+	if (r > 1.0) { r = 1.0; }
+	if (r < -1.0) { r = -1.0; }
+
+	print r;
+}
+' "$@"
+

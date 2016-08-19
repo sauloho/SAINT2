@@ -1,0 +1,759 @@
+SAINT 2 Code Guide                                    David Fisher, 29/3/11
+------------------
+
+CONTENTS
+
+0. Introduction
+1. The configuration file and major classes
+2. Class overviews
+3. Top level activities
+4. Performing runs
+5. File List
+
+
+0. Introduction
+---------------
+
+To understand everything in this code guide, a familiarity with the operation
+of SAINT 2 is required. The SAINT 2 design document ("SAINT 2 design and
+operation") is a useful source of such information.
+
+
+1. The configuration file and major classes
+-------------------------------------------
+
+The main() function starts by creating an object of class Config which
+parses the command line arguments and reads the configuration file.
+
+The Config class includes an enum called Section, which corresponds to
+the different sections of the configuration file and to different C++
+clases:
+
+enum value   Config section    Class        Header file
+
+S_Sequence   "[Sequence]"      Sequence     peptide/sequence.h
+S_Runner     "[General]"       Runner       main/runner.h
+S_Extend     "[Extension]"     Extender     extend/extender.h
+S_Scoring    "[Scoring]"       Scorer       score/scorer.h
+S_Strategy   "[Strategy]"      Strategy     strategy/strategy.h
+S_Movement   "[Movement]"      Mover        move/mover.h
+
+main() then creates a Runner object, which calls Config::init_runner()
+in its constructor to initialise itself. This function creates the
+appropriate subclass of Scorer, Mover, etc. with lines like this:
+
+   r->set_strategy(Strategy::create(m_param[S_Strategy]));
+
+For example, if the configuration file says:
+
+   [Strategy]
+   type = monte
+
+then Strategy::create() will create an object of class Strategy_Monte, which is
+a subclass of Strategy. Strategy is just an abstract base class; Strategy_Monte
+is a concrete class that implements the virtual functions in class Strategy.
+
+1.1. Functions present in all major classes
+-------------------------------------------
+
+In addition to a static create() function, these classes all contain the
+following functions:
+
+virtual bool parse_parameter(name, value) - called for each "name = value"
+line in the configuration file for the class's section. Returns false
+if the parameter is unrecognised.
+
+virtual void verify_parameters() - called all of the parameters have been
+read from the configuration file. Checks for missing or conflicting values
+in the parameters that have been parsed.
+
+static void print_template(stream) - called when the "-c" command line option
+is used to output a configuration file template. Subclasses have a
+print_template() function as well with an extra bool parameter called
+"commented"; if set to true, lines are prefixed with a "#" character.
+
+static const char *config_section() - returns the printed name of the
+section (eg. "general" for class Runner).
+
+Subclasses also contain a "static const char *type()" function, which returns
+a unique string for that class (eg. "monte" for Strategy_Monte). This string
+corresponds to the "type = ..." parameter in the configuration file.
+
+1.2. Looping over subclasses
+----------------------------
+
+Because it is not possible to write a loop which iterates over a list of
+C++ classes, the code uses macros to do something similar. There is a macro
+definition near the top of strategy.cpp that says:
+
+#define for_each_Strategy_subclass(MACRO_NAME) \
+do { \
+   MACRO_NAME(Strategy_Strict); \
+   MACRO_NAME(Strategy_Monte); \
+   MACRO_NAME(Strategy_Boltz); \
+} while (0)
+
+This makes it possible to write a "loop" like:
+
+   #define DO_SOMETHING(c) ...
+   for_each_Strategy_subclass(DO_SOMETHING);
+
+... which calls DO_SOMETHING for each subclass of Strategy. You can use
+"break" and "continue" inside DO_SOMETHING, just like a normal loop.
+
+The reason for doing things this way is so that there is just one place
+in the code which needs to know about all of the subclasses of each class.
+
+1.3. Adding new subclasses
+--------------------------
+
+The simplest way to add a new subclass of Extender, Scorer, Strategy or
+Mover is to copy an existing one and modify it.
+
+As well as the virtual functions in the base class, a new subclass should
+have two static functions:
+
+A "static const char *type()" function that returns a unique id string
+for the class that is found in the configuration file (eg. the string
+"monte" for Strategy_Monte); and
+
+A "static void print_template(std::ostream &out, bool commented = true)"
+function that prints a configuration file template for the class (with
+the comment character '#' before each line if "commented" is true).
+
+A virtual function common to all of the subclasses is parse_parameter(),
+which is called for each parameter in configuration file for the subclass's
+section. The virtual function verify_parameters() is called once after all
+of the parameters have been parsed to check for missing values, etc.
+
+2. Class overviews
+------------------
+
+2.1. Sequence
+-------------
+
+A Sequence holds a list of amino acids (for a single protein chain),
+and (optionally) a list of corresponding codons.
+
+The main purpose of the Sequence class is to be a parameter to
+Peptide::create_from_sequence().
+
+2.2. Peptide, Residue, Amino, Codon and Atom
+--------------------------------------------
+
+A Peptide contains a list of Residues. Each Residue has an Amino (amino acid
+type), a Codon (may be unknown), and a list of Atoms (type Atom_Vec).
+
+Each Atom has an Atom_Type, a RAPDF id (unique for each type of atom in each
+type of amino acid) and a PDB record (which stores the ATOM data if the peptide was originally read from a PDB file). The 3D coordinates are stored separately
+in class Conformation; this is so that the whole conformation may be easily
+swapped with another one without having to duplicate the other peptide data.
+
+The Atom_Type class is a wrapper for enum Atom_Id (in peptide/atom_id.h),
+which has values such as Atom_CA for a backbone alpha carbon or Atom_SG for
+a gamma sulphur. Only the five backbone atoms are important (Atom_N, Atom_CA,
+Atom_C, Atom_O and Atom_CB); the other values are only ever used in
+all-atom RAPDF scoring, which does not occur in the normal use of SAINT 2
+(only when the -a option is used when using saint2 to score a structure).
+
+Class Residue stores its atoms in a vector (Atom_Vec). The backbone atoms
+(including CB) are always present and appear in a fixed order for fast
+retrieval; other side chain atoms are optional, and may appear in any order.
+
+Residue::add_atom() adds a new atom to the residue (making sure that the
+atom type is legal for that amino acid type).
+
+An Atom can be retrieved from a Residue either by its Atom_Type or using
+an integer index (starting from 0).
+
+The residues in a peptide may be accessed by an integer index as well.
+Residue 0 is always the N terminus. During cotranslation, Peptide::length()
+returns the number of residues extruded so far. If the peptide is being
+extruded normally (N to C), the most recently extruded residue for Peptide p
+will have index "p.length() - 1".
+
+However, since extrusion can start from the C terminal (if global variable
+reverseSaint is true), the functions Peptide::start() and Peptide::end() have
+been provided, which always give the lowest and highest valid residue index
+(ie. start is always < end). If extrusion is being done in reverse, end()
+returns the index of the C terminus; if extrusion is normal, start() returns
+the index of the N terminus (ie. 0).
+
+Peptide::full_length() returns the total number of residues when the
+peptide is full grown (the length of the amino acid sequence in the original
+call to Peptide::create_from_sequence()).
+
+Peptide::write_pdb() writes the Peptide to a file in PDB format. There is
+a read_pdb() function as well.
+
+2.3. Scorer
+-----------
+
+Scorer is an abstract base class. The virtual function Scorer::score(Peptide)
+returns a double as the score for the peptide; lower scores are better.
+
+Scorer_Combined is a concrete subclass of Scorer that combines Solvation,
+Orientation, Lennard-Jones, RAPDF, Hydrogen Bonding, Torsion and Ribosome
+Wall scores, and returns a weighted sum.
+
+To add a new scoring term, do the following:
+
+- Create a .h and .cpp file in saint2/src/score. The simplest method is
+  to base them on hbond.h and hbond.cpp. The primary function to write
+  is score(), which returns the score for a structure (low scores are better).
+  Use "#ifndef RAW_SCORE" to enclose the score normalisation part
+  (see Score Normalisation in the SAINT 2 design document).
+- In scorer_combined.h, add a new type to enum Score_Term (just before SC_NUM).
+- Add a member variable for the new type (like m_hbond).
+- In scorer_combined.cpp, add the name of the new type to c_score_name[].
+  Also add a value to c_param_filename[] and c_param_short_filename[], the
+  configuration file parameters for data files (use "" if there is no
+  associated data file). In this context, "short" refers to peptides that
+  are less than or equal to 150 residues long.
+- Also update c_param_weight[] and c_param_short_weight[].
+- Update the constructor and destructor to create and destroy the new
+  member variable, and parse_parameter() to set the data file (if any).
+- Add a case for the new score type to Scorer_Combined::score().
+
+
+2.4. Strategy
+-------------
+
+Strategy is an abstract base class. Given a list of scores and the current
+peptide's score, a Strategy decides which (single) score to accept, or to
+reject all of them.
+
+The subclass Strategy_Boltz assigns a different probability to each score
+based on the score change, including a change of 0 (ie. keep the current
+structure). This strategy is intended to be used with several candidate
+structures (eg. 10).
+
+Strategy_Monte ("Monte Carlo using the Metropolis Criterion", or "Simulated
+Annealing using constant temperature") always accepts a score decrease,
+but sometimes rejects a score increase. It can have several candidate
+structures, but usually has just one.
+
+Strategy_Strict only accepts a decrease in score. If there is more than one
+such score, the greatest decrease is selected.
+
+Strategy_Always accepts every new structure; this is only useful for testing
+purposes.
+
+Class Strategy contains the following virtual functions:
+
+virtual int num_candidates() - the number of candidate peptides the Runner
+should generate each time (as specified in the configuration file with
+parameter "number = ...").
+
+virtual int select(old_score, new_score_vector) - select a single score from
+new_score_vector (ie. return the index of the score selected), or return "-1"
+to indicate "select none of them". old_score is the score for the current
+peptide, and new_score_vector contains the scores for the candidate peptides.
+This function is called by Runner::do_runs() after each move.
+
+virtual void start_run(), virtual void end_run() - called before the start of
+each new run and at the end of a run to allow the Strategy to perform any
+required initialisation and cleanup (usually none).
+
+virtual bool stop() - returns true if the Strategy wants the Runner to end
+the current run (to allow a Strategy subclass to have its own special criteria
+for when to stop; called in Runner::do_runs()).
+
+virtual bool do_runs() - this function allows a Strategy subclass to have
+its own specialised replacement for Runner::do_runs(). Returning true tells
+Runner::do_runs() to behave normally; otherwise it assumes that the Strategy
+has done all of the work, and does nothing else.
+
+2.5. Extender
+-------------
+
+Extender is an abstract base class. An Extender tells the Runner when it
+is time to perform the next extrusion. The actual work of extruding is
+done by the Mover class (in Mover::extend()).
+
+It contains the following virtual functions:
+
+virtual bool must_extend(Peptide, Runner) - returns true if it is time for
+the next extrusion. This is called by Extender::check_extend(), which returns
+the number of residues to extrude (0 if must_extend() returned false).
+
+virtual void start_run(Peptide, Runner) - called at the beginning of each
+run so that the Extender can do any required initialisation.
+
+virtual void after_extend(Peptide, Runner) - called after each extension
+in case the Extender needs to do anything (eg. reset a flag).
+
+The Extender_Fixed subclass is the basic version; there is a fixed number
+of moves between extrusions.
+
+Extender_Codon bases the number of moves after each extrusion on the codon
+information (see the SAINT 2 design document for details).
+
+The number of moves after each extrusion is calculated by the virtual
+function calculate_num_moves() before any moves are made. The results are
+stored in the m_moves vector. To see these values, run the program
+calc_invitro_moves (saint2/src/timing/calc_invitro_moves.cpp) with the
+"-d" option.
+
+2.6. Mover
+----------
+
+Mover is an abstract base class. A Mover is responsible for performing
+individual moves, each of which modifies the Peptide in some way. It also
+handles peptide initialisation and extrusion.
+
+It contains the following virtual functions:
+
+virtual void init_sequential(Peptide, initial_length, observer) - initialise a
+peptide for in vivo (cotranslational) folding.
+
+virtual void init_non_sequential(Peptide, bool random_coil, observer) -
+initialise a peptide for in vitro folding. (At the moment, random_coil is
+not implemented).
+
+virtual void do_random_move(Peptide, number, result_vector, exhaustive_for_pos,
+observer) - given a peptide, fill result_vector with "number" peptides which
+are the result of performing a single random move to the original peptide
+(ignore the "exhaustive_for_pos" parameter; it means, do all possible fragment
+replacements at the selected position, and is no longer implemented).
+
+virtual void extend(Peptide, num_residues, ribosome_wall, observer) - extrude
+the next "num_residues" residues.
+
+(The "observer" argument in these functions is a Reporter object which
+can do things like printing progress).
+
+The Mover_Fragment_Fwd and Mover_Fragment_Rev subclasses perform fragment
+replacement as the "move"; the two classes are for the "forward" (N to C)
+and "reverse" (C to N) direction.
+
+The ribosome is represented by a 2D plane, and there is a scoring penalty
+for crossing it while it is still attached to the ribosome. The reason the
+Mover class needs to know about it is so that the structure can be rotated
+appropriately so that it faces "away" from the ribosome (to make scoring
+simpler).
+
+Mover_Fragment requires a fragment library for the target protein (stored in
+a single file); the library is loaded when it is first needed using the
+function Mover_Fragment_Fwd/Rev::load_fragments().
+
+The fragments are stored in a vector of vectors (m_fragment):
+for Mover_Fragment_Fwd, the index is the end position of the fragment
+(eg. m_fragment[8] is the list of fragments ending at position 8). Another
+vector, m_start_fragment, contains pointers to the fragments that start at
+position 0.
+
+Mover_Fragment_Rev is similar, but m_fragment is indexed by the start instead
+of the end position of the fragments, and there is a vector m_end_fragment
+instead of m_start_fragment.
+
+Various matrix transformations are used by this class to rotate and align
+fragments. The actual mathematical functions are in classes Matrix_3_3,
+Point and Transform (found in saint2/src/main), with supporting functions
+(such as torsion angle calculation) in main/geom.h.
+
+The alpha carbon in the most recently extruded residue is always at (0, 0, 0). If the ribosome wall is desired, the structure is rotated so that the centre
+of gravity (average position) of all alpha carbons lies on the X axis.
+
+2.7. Runner
+-----------
+
+The Runner class manages all of the other classes. It performs the
+number of runs specified on the command line (with the "-n" option),
+and calls the appropriate Scorer, Strategy, Extender and Mover functions
+when they are needed. See the section "Performing runs" below for more
+details.
+
+The Runner class does not have any virtual functions, since it is not
+intended to be subclassed.
+
+3. Top level activities
+-----------------------
+
+After the Config and Runner objects have been created in main(), the program
+checks if the name of a PDB file has been specified; if so, it reads the file
+and prints its residue sequence and score, then exits.
+
+Otherwise, the amino acid or nucleotide sequence is read into a Sequence
+object (either from a FASTA file or directly from the configuration file),
+and a Reporter object is created. The Reporter object will print the progress
+of each run, and write the final structure to a PDB file; this happens in
+Reporter::end_run().
+
+Lastly, main() calls "runner.do_runs(seq, reporter)" to do all the work.
+
+3.1. Observers and Reporters
+----------------------------
+
+Class Reporter inherits from class Run_Observer, which contains virtual
+functions like before_start() and after_end() which are called by the
+Runner object at the appropriate times.
+
+The reason for having a separate Run_Observer class which Reporter inherits
+from instead of just having a Reporter is to potentially allow more than one
+kind of Run_Observers to exist, eg. one to gather statistics, a "verbose" one,
+etc. But doing this would require some code changes, since at the moment
+a Runner is only associated with a single Run_Observer (passed as an
+argument to Runner::do_runs()).
+
+4. Performing runs
+------------------
+
+Runner::do_runs() starts by calling Strategy::do_runs(), just in case the
+Strategy object wants to handle everything itself (in which case do_runs()
+returns immediately).
+
+If not, it performs one run at a time as follows:
+
+- the peptide is created from the amino acid (or nucleotide) sequence.
+- the peptide is initialised with init_sequential() or init_non_sequential(),
+  depending on whether cotranslational or in vitro folding was specified
+  in the configuration file.
+- alternatively, if a starting structure was specified (for in vitro only),
+  the initial structure is set to that structure (with ideal bond lengths).
+- the specified number of moves is performed, extruding when required
+  (ie. whenever Extender::check_extend() returns a non-zero value).
+- for each move, the required number of candidate structures is generated,
+  and each structure is scored. The scores are passed to the Strategy object,
+  which selects one (or none) of them. If one was selected, it becomes the
+  new structure.
+- do_runs() keeps track of the best (full grown) structure seen so far in the
+  current run. At the end of the run, Reporter::end_run() writes out the
+  best structure. 
+
+5. File List
+------------
+
+5.1 src/clustering (tools)
+--------------------------
+
+cluster.cpp
+
+- main file for saint2/bin/cluster program
+
+cluster_template.h
+
+- template class for hierarchical clustering with average linkage (not specific
+  to SAINT 2)
+
+5.2 src/decoygen (tools)
+------------------------
+
+create_dgen_data.cpp
+
+- for creating "dgen.data" file
+
+dgen.data
+
+- Ramachandran plots for each amino acid type (required by decoygen program)
+
+main.cpp
+
+- main file for "decoygen" program, David Fisher's version of "wiggler" --
+  for creating decoys with a particular range of GDT_TS values from the native
+  structure.
+
+5.3 src/extend (saint2)
+-----------------------
+
+extender_codon.cpp, extender_codon.h
+
+- class Extender_Codon, for controlling extrusion using codon speeds
+
+extender_fixed.cpp, extender_fixed.h
+
+- class Extender_Fixed, for controlling extrusion with a fixed or linearly
+  increasing number of moves
+
+extender.cpp, extender.h
+
+- class Extender (base class for Extender_Codon and Extender_Fixed)
+
+5.4 src/main (saint2)
+---------------------
+
+c_file.cpp, c_file.h
+
+- class C_File, a C++ interface to C file functions (with automatic closing
+  on destruction and convenience functions like current line number, etc)
+
+common.cpp, common.h
+
+- common functions and definitions
+
+config.cpp, config.h
+
+- class Config, for managing configuration files
+
+distribution.cpp, distribution.h
+
+- class Distribution, for selecting objects from a set that have different
+  relative probabilities
+
+geom.cpp, geom.h
+
+- geometrical functions and definitions (eg. torsion angle calculation;
+  ideal bond lengths)
+
+main.cpp
+
+- the main() function for saint2
+
+matrix.cpp, matrix.h, matrix_test.cpp
+
+- class Matrix_3_3, a 3x3 matrix
+
+param_list.cpp, param_list.h
+
+- functions related to struct Name_Value, a name/value pair
+
+parse.cpp, parse.h
+
+- number parsing functions
+
+point.cpp, point.h
+
+- class Point, a three dimensional point
+
+random.cpp, random.h
+
+- class Random, a wrapper for the standard C random number functions
+
+reporter.cpp, reporter.h
+
+- class Reporter (subclass of Run_Observer), mainly for debugging saint2 runs;
+  also writes out the best structure after each run
+
+rmsd.cpp, rmsd.h
+
+- function for calculating the RMSD between two structures (third party
+  code)
+
+runner.cpp, runner.h
+
+- class Runner, saint2's top level class (manages everything else)
+
+run_observer.h
+
+- class Run_Observer, for monitoring what happens during a run (base class for
+  Reporter)
+
+static_init.cpp, static_init.h
+
+- class Static_Init, for creating and destroying other classes whose
+  initialisation order is important
+
+stream_printf.cpp, stream_printf.h
+
+- class Printf, a C++ interface to the C printf() function
+
+temp_file.cpp, temp_file.h
+
+- class Temp_File, a file that is automatically deleted on destruction
+
+transform.cpp, transform.h
+
+- class Transform, for performing transformations on Points (eg. rotation)
+
+5.5 src/mkdata (tools)
+----------------------
+
+check_chains.cpp
+
+- program to check a PDB file (or list of PDB files) for missing residues and
+  atoms
+
+convert_fragments.cpp
+
+- main file for saint2/bin/convert_fragments, for converting a fragment library
+  from "explicit" to "SAINT 2" format
+
+extract_fragment_from_pdb.cpp
+
+- program to extract a specified fragment from a PDB file
+
+filter_len_11.cpp
+
+- program to check a list of fragments and exclude any that would result in
+  an undefined torsion angle (because the previous residue is undefined and
+  the fragment is not for the start of the peptide, or the following residue
+  is undefined and the fragment replacement is not at the end of the peptide)
+
+get_fasta.cpp
+
+- program to create a FASTA file (amino acid sequence) from a PDB file
+
+main.cpp
+
+- main file for "mkdata" program, for creating the data files for the torsion,
+  solvation, orientation and RAPDF scores (named saint2/data/*.data)
+
+5.6 src/move (saint2)
+---------------------
+
+fragment.cpp, fragment.h
+
+- class Fragment, a single fragment in a fragment library
+
+mover.cpp, mover.h
+
+- class Mover (base class for Mover_Fragment)
+
+mover_fragment.cpp, mover_fragment.h
+
+- class Mover_Fragment (base class for Mover_Fragment_Fwd and _Rev; implements
+  functions used by both subclasses, such as load_fragments())
+
+mover_fragment_fwd.cpp, mover_fragment_fwd.h
+
+- class Mover_Fragment_Fwd, for normal fragment replacement (N to C)
+
+mover_fragment_rev.cpp, mover_fragment_rev.h
+
+- class Mover_Fragment_Fwd, for reversed fragment replacement (C to N)
+
+5.7 src/peptide (saint2)
+------------------------
+
+amino.cpp, amino.h
+
+- class Amino, a single amino acid (not a residue, but an amino acid type)
+
+atom.cpp, atom.h
+
+- class Atom, a single physical atom
+
+atom_id.h
+
+- enum Atom_Id, a type of atom (nitrogen, alpha carbon, etc.)
+
+atom_type.cpp, atom_type.h
+
+- class Atom_Type, a wrapper for enum Atom_Id
+
+codon.cpp, codon.h
+
+- class Codon, a single codon
+
+conformation.cpp, conformation.h
+
+- tclass Conformation, the positions of all the atoms in a Peptide (as well
+  as the torsion angles)
+
+pdb_atom_rec.cpp, pdb_atom_rec.h
+
+- class PDB_Atom_Rec, the information from a single ATOM record in a PDB file
+
+peptide.cpp, peptide.h
+
+- class Peptide, a single protein chain (the top level "protein" object in
+  saint2)
+
+residue.cpp, residue.h
+
+- class Residue, a single residue in a Peptide
+
+sequence.cpp, sequence.h
+
+- class Sequence, an amino acid sequence
+
+5.8 src/score (saint2)
+----------------------
+
+hbond.cpp, hbond.h
+
+- class HBond, for hydrogen bond scoring
+
+lennard_jones.cpp, lennard_jones.h
+
+- class Lennard_Jones, for Lennard-Jones scoring (and steric clash detection)
+
+orientation.cpp, orientation.h, orientation_impl.cpp, orientation_impl.h
+
+- class Orientation, for "orientation" scoring. The separate _impl files make
+  it simpler to have a separate object to handle scoring for short and long
+  proteins (<= 150 and > 150 residues long, respectively)
+
+rapdf.cpp, rapdf.h, rapdf_impl.cpp, rapdf_impl.h
+
+- class RAPDF, for RAPDF scoring (see above for the reason for _impl files)
+
+ribosome.cpp, ribosome.h
+
+- class Ribosome, for ribosome wall scoring
+
+scorer_combined.cpp, scorer_combined.h
+
+- class Scorer_Combined, a subclass of Scorer. Manages the other score types,
+  and combining the scores together using weights (from the configuration file)
+
+scorer.cpp, scorer.h
+
+- class Scorer (base class for Scorer_Combined)
+
+solvation.cpp, solvation.h, solvation_impl.cpp, solvation_impl.h
+
+- class Solvation, for solvation (burial) scoring (see above for the reason
+  for _impl files)
+
+torsion.cpp, torsion.h, torsion_impl.cpp, torsion_impl.h
+
+- class Torsion, for torsion angle scoring (see above for the reason for
+  _impl files)
+
+5.9 src/strategy (saint2)
+-------------------------
+
+strategy_always.cpp, strategy_always.h
+
+- class Strategy_Always, a Strategy subclass that always accepts the new
+  structure (for testing purposes only)
+
+strategy_boltz.cpp, strategy_boltz.h
+
+- class Strategy_Boltz, a Strategy subclass that uses the Boltzmann
+  distribution
+
+strategy.cpp, strategy.h
+
+- class Strategy (base class for the other classes in this directory)
+
+strategy_monte.cpp, strategy_monte.h
+
+- class Strategy_Monte, a Strategy subclass using the standard Monte Carlo
+  method with the Metropolis Criterion
+
+strategy_strict.cpp, strategy_strict.h
+
+- class Strategy_Strict, a Strategy subclass that only accepts better scoring
+  structures (ie. downhill search)
+
+5.10 src/timing (tools)
+-----------------------
+
+calc_invitro_moves.cpp
+
+- main file for saint2/bin/calc_invitro_moves
+
+timing.cpp
+
+- program to print the amount of CPU time to perform moves in saint2
+
+5.11 src/utils (tools)
+----------------------
+
+get_weights.cpp
+
+- program to determine the weights for each scoring term, given a file
+  containing the following values for a set of structures (generated with
+  decoygen): name, GDT_TS to native, length, (raw) solvation score, orientation
+  score, Lennard-Jones score, RAPDF score, hydrogen bonding score and torsion
+  angle score
+
+5.12 src/write (tools)
+----------------------
+
+main.cpp
+
+- program to write a single chain from a PDB file (using canonical numbering)
+

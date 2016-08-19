@@ -1,0 +1,74 @@
+
+RESULTS_PER_DIR=1000
+
+if [ -z "$SAINT2" ]
+then
+	echo "$0: Please define the variable SAINT2 as the base Saint 2 directory (one up from the \"bin\" directory), eg:
+	export SAINT2=\$HOME/saint2" 1>&2
+fi
+
+if [ $# -ne 6 ]
+then
+cmd=`echo $0 | sed 's/.*\///g'`
+echo "Usage: $cmd num_runs pdb_id fasta_file library moves temperature
+
+Parameters are as follows:
+
+num_runs         Number of runs to perform (structures to generate)
+fasta_file       Amino acid sequence
+library          Fragment library
+moves            Number of moves to perform
+temperature      Monte Carlo + Metropolis Criterion temperature (eg. 2.5)
+" 1>&2
+exit 0
+fi
+
+runs="$1"
+id="$2"
+shift; shift
+
+if echo "$runs" | grep -q -v '^[0-9][0-9]*$'
+then
+    echo "$0: Illegal number of runs: $runs" 1>&2
+    exit 1
+fi
+
+if [ \( "$runs" = 0 \) -o \( "$runs" -gt 100000 \) ]
+then
+    echo "$0: Illegal number of runs: $runs (range is 1-100000)" 1>&2
+    exit 1
+fi
+
+config=`$SAINT2/scripts/create_config "$id" i $*`
+
+if [ $? != 0 ]
+then
+	# error message already printed
+	exit 1
+fi
+
+# prefix of results files
+
+out_prefix=`echo $config | sed 's/^config_//g'`
+
+if [ ! -d $out_prefix ]
+then
+	mkdir $out_prefix
+fi
+
+cd $out_prefix
+
+i=0
+while [ \( -f err_s${i} \) -o \( -f ${out_prefix}_s$i \) ] ;
+do
+	i=`expr $i + 1`
+done
+
+
+
+while [ $runs -gt 0 ] ; do
+	$SAINT2/bin/run_then_finish $SAINT2/bin/do_cmd_outfile err_s${i} $SAINT2/bin/saint2 ../$config -n 1 -s $i -o ${out_prefix}_s${i}_r$runs
+	runs=`expr $runs - 1`
+done
+runs2=`expr $runs + 1`
+echo ${out_prefix}_s${i}_r$runs2

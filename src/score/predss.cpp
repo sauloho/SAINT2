@@ -1,0 +1,112 @@
+// -*- mode: c++; c-file-style: "ellemtel"; encoding: utf-8; -*-
+//
+// Copyright (C) 2012 Saulo H. P. de Oliveira
+//
+// Saulo H. P. de Oliveira <saulo.deoliveira@pmb.ox.ac.uk>
+// 2014-04-26
+//
+// Predicted Secondary Structure scoring method.
+// 
+// 
+
+
+#include <string>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <iostream>
+#include <fstream>
+#include "amino.h"
+#include "residue.h"
+#include "peptide.h"
+#include "atom.h"
+#include "scorer_combined.h"
+#include "predss.h"
+
+PredSS::PredSS()
+{
+}
+
+PredSS::~PredSS()
+{
+}
+
+void PredSS::set_short_data_file(const std::string &filename)
+{
+	m_filename = filename;
+}
+
+void PredSS::set_long_data_file(const std::string &filename)
+{
+	m_filename  = filename;
+}
+
+void PredSS::load_data()
+{
+	FILE *input_file; 
+	char AUX[600];
+	float aux1,aux2,aux3;
+	int i;
+
+	if (m_data_loaded)
+	{
+		return;
+	}
+
+	if (m_filename.empty())
+	{
+		std::cerr << "Error:  Predicted Secondary Structure File not defined!\n";
+		exit(1);
+	}
+
+	input_file = fopen(m_filename.c_str(),"r");
+	
+	if (input_file == NULL)
+	{
+		std::cerr << "Predicted Secondary Structure File not found: " << m_filename.c_str() << "\n";
+		exit(1);
+	}
+
+	for(fscanf(input_file,"%d",&i);fscanf(input_file,"%s %c %f %f %f",AUX,&m_data[i],&aux1,&aux2,&aux3)!=EOF && i<999;fscanf(input_file,"%d",&i));
+
+	m_data_loaded = true;
+	fclose(input_file);	
+}
+
+
+double PredSS::score(const Peptide& p, bool verbose) 
+{
+	load_data();
+	double phi2,psi2;
+	int i;
+	double score=0.0;
+	char SS2;
+
+	for (i = p.start(); i <= p.end()-2; i++)
+	{
+		phi2 = p.conf().phi(i+1);
+		psi2 = p.conf().psi(i+1);
+	               
+		phi2 = fmod(phi2*57.29578,360);
+		psi2 = fmod(psi2*57.29578,360);
+
+ 		if(  (  phi2 > -155 && phi2 < -47 && psi2 > -62 && psi2 < -52) || (phi2 >-104 && phi2 < -47 && psi2 > -52 && psi2 <-37) || (phi2 >-117&&phi2 <-104 && psi2 > -52 && psi2 < -37)  )
+ 			SS2='H';
+		else 
+		{ 
+ 			if ( ( phi2 >-155 && phi2 <-138 && psi2 >90 && psi2 < 155) || (phi2 >-140 && phi2 <-64 && psi2 >90 && psi2 <180) || (phi2 >-64 && phi2 <-53 && psi2 >90 && psi2 <168) )
+ 		 		SS2 = 'E';
+ 		 	else
+		 	 	SS2 = 'C'; 
+		}
+		if( m_data[i+1] !='C' && m_data[i+1] != SS2 ) score+=1;
+	}
+#ifndef RAW_SCORE
+	score /= p.end()-2;
+	score = score * 100.0;
+#endif // RAW_SCORE
+	//std::cerr << "Pred SS " << score << "\n";
+	return score;
+}
+

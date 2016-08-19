@@ -1,0 +1,14 @@
+# print the nth field in the input
+#
+# eg. cat file | field 3 1    (prints the third and first field)
+#
+# Field 0 is the whole line.
+
+case $# in
+0) echo "Usage: $0 <field numbers>" 1>&2
+   exit 1;;
+esac
+
+fields=`echo $* | awk '{ for (f = 1;f <= NF;f++) { if (f > 1) printf ","; printf "$%s", $f; } }'`
+
+awk '{ print '"$fields"'; }'

@@ -1,0 +1,39 @@
+# find the RMSD of all PDB files with each other
+
+case $# in 
+0) echo "Usage: $0 <PDB files> ..." 1>&2
+   exit 1
+;;
+esac
+
+if [ -z "$SAINT2" ]
+then
+	echo "$0: error: please define environment variable SAINT2" 1>&2
+	exit 1
+fi
+
+echo $* | fmt -1 | awk '
+{
+	n = NR - 1;
+	f[n] = $1;
+}
+END \
+{
+	print NR "\n";
+	for (n = 0;n < NR;n++)
+	{
+		print n "=" f[n];
+	}
+
+	printf "\n";
+
+	for (n = 0;n < NR - 1;n++)
+	{
+		for (m = n + 1;m <= NR - 1;m++)
+		{
+			printf "%d %d ", n, m;
+			system("'"$SAINT2"'/bin/rmsd " f[n] " " f[m]);
+		}
+	}
+}'
+

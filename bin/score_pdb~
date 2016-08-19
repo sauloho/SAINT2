@@ -1,0 +1,81 @@
+
+TOP=1000
+CUTOFF=6.0
+
+if [ $# -lt 2 ]
+then
+	echo "Usage: $0 prefix directory [ directory2 directory3 ... ]
+
+Finds the top $TOP scoring structures in the specified directories
+(files are assumed to start with the specified prefix), then clusters them
+using a cutoff value of $CUTOFF.
+
+Output files are:
+
+res_scores        saint2 score for all structures
+top/              directory containing top $TOP scoring structures (links)
+res_rmsds         pairwise RMSDs of these structures
+res_clusters      clusters for these structures
+best_*            central structure in largest cluster
+
+" 1>&2
+exit 1
+fi
+
+if [ -z "$SAINT2" ]
+then
+	export SAINT2=\$HOME/saint2_orig
+fi
+
+prefix=$1
+shift
+
+# score all structures in all directories
+
+echo "Finding scores ..." 1>&2
+
+for dir in $*
+do
+	if [ ! -d $dir ]
+	then
+		echo "$0: cannot find directory $dir" 1>&2
+		exit 1
+	fi
+
+	cd $dir
+	rm -f ./res_scores
+
+	for i in $prefix*
+	do
+		echo "`$SAINT2/bin/score_pdb $i` $dir/$i" >> ./res_scores
+	done
+
+	cd ..
+
+done
+
+sort -n res_scores > tmp_scores
+mv tmp_scores res_scores
+
+# find the top scoring structures and copy (link) to top/ directory
+
+for dir in $*
+do
+	if [ ! -d $dir ]
+	then
+		echo "$0: cannot find directory $dir" 1>&2
+		exit 1
+	fi
+	cd $dir
+
+	j=0
+	for i in `head -$TOP res_scores -n 10 | awk '{ print $2; }'`
+	do
+		j=`expr $j + 1`
+		cp $i decoy$j
+		#echo "decoy$j" 1>&2
+		$SAINT2/3rdparty/TMscore decoy$j ~/data/2Q7RA.pdb | awk '/^TM-score    =/ { print $3; }'
+	done
+	cd ..
+done
+

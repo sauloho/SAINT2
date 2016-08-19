@@ -1,0 +1,34 @@
+
+# Make the SAINT2 executables and copy them to the bin directory
+# (this script will perform correctly if it is run multiple times)
+
+EXECS="saint2 convert_fragments cluster write_pdb get_fasta filter_len_11 calc_invitro_moves"
+cd src
+make clean
+make depend > /dev/null
+make $EXECS
+mv $EXECS ../bin
+cd ..
+
+# find a .profile file to append the SAINT2 environment variable to
+prof=$HOME/.bash_profile
+
+if [ ! -f $prof ]
+then
+	prof=$HOME/.profile
+fi
+
+if [ -f $prof ]
+then
+	grep -q 'export SAINT2' $prof
+
+	if [ $? != 0 ]
+	then
+		echo "export SAINT2="`pwd` >> $prof
+		echo "SAINT2 environment variable appended to $prof (log in again for this to take effect)" 1>&2
+	fi
+else
+	echo "You will need to set the SAINT2 environment variable to `pwd`" 1>&2
+fi
+
+SAINT2=`pwd`

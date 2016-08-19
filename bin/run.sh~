@@ -1,0 +1,8 @@
+if [ -z "$SAINT2" ]
+then
+	echo "Defined environment variable SAINT2 as /home/markov/oliveira/saint2_orig." 
+	echo "\nPlease, ensure that is the correct installation path of SAINT2.\n"
+	export SAINT2=/home/markov/oliveira/saint2_orig
+fi
+
+$SAINT2/scripts/run_cotrans2 1 1ODD n /home/markov/oliveira/data/sanders/1ODD/1ODD.fasta.txt /home/markov/oliveira/data/sanders/1ODD/lib_1odd 10000 1000 2.5 linear

@@ -1,0 +1,3 @@
+cluster:
+	cd ..; make cluster
+

@@ -1,0 +1,383 @@
+
+# create a SAINT 2 configuration file
+#
+# Requires the "SAINT2" environment variable to be defined
+# (as the top level Saint 2 directory, ie. one up from the "bin" directory)
+
+if [ $# -eq 0 ]
+then
+cmd=`echo $0 | sed 's/.*\///g'`
+echo "Usage:
+
+Cotrans:
+$cmd pdb_id c r|n fasta_file library growth_moves additional_moves temperature [fixed|linear|(codon_file tunnel_length)] [rev]
+
+In vitro:
+$cmd pdb_id i fasta_file library moves temperature
+
+Creates an appropriately named configuration file in the current directory
+and prints the name of the file.
+
+Parameters are as follows:
+
+pdb_id           Protein id (eg. 1a1x or 1a1xA)
+'c'              Perform cotranslational folding
+'i'              Perform in vitro folding
+'r|n'            r = ribosome wall, n = no ribosome wall
+fasta_file       Amino acid or nucleotide sequence (depending on whether
+                 a codon_file is specified)
+library          Fragment library
+growth_moves     Number of moves during cotranslational growth
+additional_moves Number of moves after peptide is full grown
+moves            Number of in vitro moves
+temperature      Monte Carlo + Metropolis Criterion temperature (eg. 2.5)
+'fixed'          Fixed number of moves during cotrans growth (default)
+'linear'         Linearly increasing number of moves during cotrans growth
+codon_file       TAI value for each codon
+tunnel_length    Length of ribosome tunnel (ie. codon extrusion delay)
+'rev'            Whether to fold in reverse (C to N instead of N to C)
+" 1>&2
+exit 1
+fi
+
+orig_cmd="$0 $*"
+
+if [ $# -lt 4 ]
+then
+	echo "$0: Not enough arguments" 1>&2
+	exit 1
+fi
+
+if [ -z $SAINT2 ]
+then
+	echo "$0: Please define the variable SAINT2 as the base Saint 2 directory (one up from the \"bin\" directory), eg:
+export SAINT2=\$HOME/saint2" 1>&2
+	exit 1
+fi
+
+id="$1"
+ci="$2"
+codon=			# codon file
+distrib=fixed	# distribution ("fixed" or "linear")
+rev=			# "rev" argument (reverse)
+rib_weight=0	# ribosome weight
+
+if echo $id | grep -q '/'
+then
+	echo "$0: PDB id may not be a filename (just a code, eg. 1a1x or 1a1xA)" 1>&2
+	exit 1
+else
+
+case $ci in
+c) cotrans="true"
+   if [ $# -lt 8 ]
+   then
+       echo "$0: Not enough arguments" 1>&2
+	   exit 1
+   fi
+
+   if [ $# -gt 11 ]
+   then
+       echo "$0: Too many arguments" 1>&2
+	   exit 1
+   fi
+
+   rib="$3"
+   case "$rib" in
+   r) rib_weight=1;;
+   n) ;;			# rib_weight is 0 by default
+   *) echo "$0: ribosome argument (after 'c') must be 'r' or 'n'" 1>&2
+      exit 1
+   esac
+
+   fasta="$4"
+   lib="$5"
+   libname=`echo $lib | sed 's/.*\///g'`
+   gmoves="$6"
+   moves="$7"
+   temp="$8"
+
+   # (only check $gmoves here -- $moves will be checked later)
+   if echo "$gmoves" | grep -q -v '^[0-9][0-9]*$'
+   then
+	   echo "$0: Illegal number of growth moves: $moves" 1>&2
+	   exit 1
+   fi
+
+   # rest of the arguments are optional
+
+   shift; shift; shift; shift; shift; shift; shift; shift;
+
+   if [ \( $# -ge 1 \) -a \( \( "$1" = "fixed" \) -o \( "$1" = "linear" \) \) ]
+   then
+       distrib="$1"
+	   shift
+   elif [ \( $# -ge 1 \) -a \( "$1" != "rev" \) ]
+   then
+       codon="$1"
+	   tunnel="$2"
+       shift; shift
+
+	   if [ ! -f "$codon" ]
+	   then
+	       echo "$0: codon file not found: $codon" 1>&2
+		   exit 1
+	   fi
+
+	   codon=`$SAINT2/bin/fullpath $codon`
+
+	   if [ -z "$tunnel" ]
+	   then
+	       echo "$0: tunnel length missing after codon filename" 1>&2
+		   exit 1
+	   fi
+
+       if echo "$tunnel" | grep -q -v '^[0-9][0-9]*$'
+       then
+	       echo "$0: Illegal tunnel length: $tunnel" 1>&2
+	       exit 1
+       fi
+   fi
+
+   if [ $# -ge 1 ]
+   then
+       rev="$1"
+	   shift
+	   
+	   if [ "$rev" != "rev" ]
+	   then
+	       echo "$0: last argument is incorrect (expected 'rev' or nothing)" 1>&2
+		   exit 1
+	   fi
+   fi
+
+   name="config_${id}_c_${rib}_${libname}_${gmoves}_${moves}_t${temp}"
+
+   if [ ! -z "$codon" ]
+   then
+      name="${name}_codon_L${tunnel}"
+   else
+      name="${name}_${distrib}"
+   fi
+
+   if [ ! -z "$rev" ]
+   then
+      name="${name}_rev"
+   fi
+   ;;
+
+i) cotrans="false"
+   if [ $# -gt 6 ]
+   then
+       echo "$0: Too many arguments" 1>&2
+	   exit 1
+   fi
+   fasta="$3"
+   lib="$4"
+   libname=`echo $lib | sed 's/.*\///g'`
+   moves="$5"
+   gmoves=0
+   temp="$6"
+   name="config_${id}_i_${libname}_${moves}_t${temp}"
+   ;;
+
+*) case $1 in
+   c|i) echo "$0: First argument must be a PDB id (eg. 1a1x or 1a1xA)" 1>&2;;
+   *) echo "$0: Second argument must be either 'c' (cotran) or 'i' (in vitro)" 1>&2
+   esac
+   exit 1;;
+esac
+fi
+
+if [ ! -f "$fasta" ]
+then
+	echo "$0: FASTA file not found: $fasta" 1>&2
+	exit 1
+fi
+
+fasta=`$SAINT2/bin/fullpath $fasta`
+
+if [ ! -f "$lib" ]
+then
+	echo "$0: fragment library not found: $lib" 1>&2
+	exit 1
+fi
+
+lib=`$SAINT2/bin/fullpath $lib`
+
+if echo "$moves" | grep -q -v '^[0-9][0-9]*$'
+then
+	echo "$0: Illegal number of moves: $moves" 1>&2
+	exit 1
+fi
+
+if echo "$temp" | grep -q -v '^[0-9.][0-9.]*$'
+then
+	echo "$0: Illegal temperature: $temp" 1>&2
+	exit 1
+fi
+
+# make absolutely sure the file "$name" can be created
+if echo $name | grep -q '/'
+then
+	echo "$0: Illegal argument containing '/' character" 1>&2
+	exit 1
+fi
+
+datadir=$SAINT2/data
+
+if [ ! -d $datadir ]
+then
+	echo "$0: the directory $SAINT2/data does not exist" 1>&2
+	exit 1
+fi
+
+if [ ! -f $datadir/long_rapdf.data ]
+then
+	echo "$0: the directory $SAINT2/saint2_orig/data does not appear to contain the data files" 1>&2
+	exit 1
+fi
+
+echo $name
+
+if [ -f $name ]
+then
+	# file already exists
+	exit 0
+fi
+
+# create the configuration file
+
+echo "# Created using:" > $name
+echo "# $orig_cmd" >> $name
+echo >> $name
+
+echo "[Sequence]" >> $name
+echo >> $name
+
+if [ -z "$codon" ]
+then
+echo "type = amino" >> $name
+else
+echo "type = nucleotide" >> $name
+fi
+
+echo "file = $fasta" >> $name
+echo >> $name
+echo "[General]" >> $name
+echo >> $name
+echo "sequential = $cotrans" >> $name
+echo "moves = $moves" >> $name
+
+if [ ! -z "$rev" ]
+then
+echo "reverse = true" >> $name
+fi
+
+echo >> $name
+
+if [ $ci = "c" ]
+then
+	echo "[Extension]" >> $name
+	echo >> $name
+
+	if [ -z "$codon" ]
+	then
+	echo "type = fixed" >> $name
+	echo >> $name
+	echo "move_distribution = $distrib" >> $name
+	else
+	echo "type = codon" >> $name
+	echo "codonfile = $codon" >> $name
+	echo "tunnel_length = $tunnel" >> $name
+	fi
+
+	echo >> $name
+	echo "initial = 9" >> $name
+	echo "extrude = 1" >> $name
+	echo "growth_moves = $gmoves" >> $name
+	echo >> $name
+fi
+
+echo "[Scoring]" >> $name
+echo >> $name
+
+echo "type = combined" >> $name
+echo >> $name
+
+echo "# \"long\" = longer than 150 residues" >> $name
+echo "# \"short\" = less than or equal to 150 residues" >> $name
+echo >> $name
+
+dirsaulo=$DATA_PATH
+
+echo "long_rapdf_file = $datadir/long_rapdf.data" >> $name
+echo "long_solvation_file = $datadir/long_solv.data" >> $name
+echo "long_torsion_file = $datadir/long_torsion.data" >> $name
+echo "long_orientation_file = $datadir/long_orient.data" >> $name
+echo "long_saulo_file = $dirsaulo/$id.con" >> $name
+echo "long_predss_file = $dirsaulo/$id.fasta.ss" >> $name
+echo "long_contact_file = $datadir/foo.cmap" >> $name
+echo "long_predtor_file = $dirsaulo/$id.spXout" >> $name
+echo >> $name
+
+echo "short_rapdf_file = $datadir/short_rapdf.data" >> $name
+echo "short_solvation_file = $datadir/short_solv.data" >> $name
+echo "short_torsion_file = $datadir/short_torsion.data" >> $name
+echo "short_orientation_file = $datadir/short_orient.data" >> $name
+echo "short_saulo_file = $dirsaulo/$id.con" >> $name
+echo "short_predss_file = $dirsaulo/$id.fasta.ss" >> $name
+echo "short_contact_file = $datadir/foo.cmap" >> $name
+echo "short_predtor_file = $dirsaulo/$id.spXout" >> $name
+echo >> $name
+
+echo "long_weight_rapdf       = 0.303" >> $name
+echo "long_weight_solvation   = 0.282" >> $name
+echo "long_weight_lj          = 0.304" >> $name
+echo "long_weight_hbond       = 0" >> $name
+echo "long_weight_saulo       = 1" >> $name
+echo "long_weight_core        = 1" >> $name
+echo "long_weight_predss      = 0" >> $name
+echo "long_weight_rgyr        = 0" >> $name
+echo "long_weight_contact     = 0" >> $name
+echo "long_weight_crowding    = 0" >> $name
+echo "long_weight_randomscr   = 0" >> $name
+echo "long_weight_orientation = 0.111" >> $name
+echo "long_weight_torsion     = 0" >> $name
+echo "long_weight_predtor     = 0" >> $name
+echo >> $name
+
+echo "short_weight_rapdf       = 0.156" >> $name
+echo "short_weight_solvation   = 0.262" >> $name
+echo "short_weight_lj          = 0.505" >> $name
+echo "short_weight_hbond       = 0" >> $name
+echo "short_weight_saulo       = 1" >> $name
+echo "short_weight_core        = 1" >> $name
+echo "short_weight_predss      = 0" >> $name
+echo "short_weight_rgyr        = 0" >> $name
+echo "short_weight_contact     = 0" >> $name
+echo "short_weight_crowding    = 0" >> $name
+echo "short_weight_randomscr   = 0" >> $name
+echo "short_weight_orientation = 0.077" >> $name
+echo "short_weight_torsion     = 0" >> $name
+echo "short_weight_predtor     = 0" >> $name
+echo >> $name
+
+echo "weight_ribosome = $rib_weight" >> $name
+echo >> $name
+
+echo "[Strategy]" >> $name
+echo >> $name
+
+echo "type = monte" >> $name
+echo "temperature = $temp" >> $name
+echo "number = 1" >> $name
+echo >> $name
+
+echo "[Movement]" >> $name
+echo >> $name
+
+echo "type = fragment" >> $name
+echo "lib = $lib" >> $name
+echo >> $name
+

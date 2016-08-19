@@ -1,0 +1,83 @@
+if [ -z "$SAINT2" ]
+then
+	echo "$0: Please define the variable SAINT2 as the base Saint 2 directory (one up from the \"bin\" directory), eg:
+	export SAINT2=\$HOME/saint2" 1>&2
+fi
+
+if [ $# -lt 8 ]
+then
+cmd=`echo $0 | sed 's/.*\///g'`
+echo "Usage: $cmd num_runs pdb_id r|n fasta_file library growth_moves additional_moves temperature [fixed|linear|(codon_file tunnel_length)] [rev]
+
+Parameters are as follows:
+
+num_runs         Number of runs to perform (structures to generate)
+pdb_id           Protein id (eg. 1a1x or 1a1xA)
+'r|n'            r = ribosome wall, n = no ribosome wall
+fasta_file       Amino acid or nucleotide sequence (depending on whether
+                 a codon_file is specified)
+library          Fragment library
+growth_moves     Number of moves during cotranslational growth
+additional_moves Number of moves after peptide is full grown
+temperature      Monte Carlo + Metropolis Criterion temperature (eg. 2.5)
+'fixed'          Fixed number of moves during cotrans growth (default)
+'linear'         Linearly increasing number of moves during cotrans growth
+codon_file       TAI value for each codon
+tunnel_length    Length of ribosome tunnel (ie. codon extrusion delay)
+'rev'            Whether to fold in reverse (C to N instead of N to C)
+" 1>&2
+exit 0
+fi
+
+runs="$1"
+id="$2"
+shift; shift
+
+if echo "$runs" | grep -q -v '^[0-9][0-9]*$'
+then
+    echo "$0: Illegal number of runs: $runs" 1>&2
+    exit 1
+fi
+
+if [ \( "$runs" = 0 \) -o \( "$runs" -gt 100000 \) ]
+then
+    echo "$0: Illegal number of runs: $runs (range is 1-100000)" 1>&2
+    exit 1
+fi
+
+config=`$SAINT2/bin/create_config "$id" c $*`
+
+if [ $? != 0 ]
+then
+	# error message already printed
+	exit 1
+fi
+
+# prefix of results files
+
+out_prefix=`echo $config | sed 's/^config_//g'`
+
+if [ ! -d $out_prefix ]
+then
+	mkdir $out_prefix
+fi
+
+cd $out_prefix
+
+i=0
+while [ -f ${out_prefix}_s$i ] ;
+do
+	i=`expr $i + 1`
+done
+
+
+#for i in $dirlist
+#do
+#	mkdir $i
+#done
+
+while [ $runs -gt 0 ] ; do
+	$SAINT2/bin/run_then_finish $SAINT2/bin/do_cmd_outfile err_$i $SAINT2/bin/saint2 ../$config -n $r -s $i -o ${out_prefix}_s$i
+	i=`expr $i + 1`
+	runs=`expr $runs - 1`
+done

@@ -1,0 +1,115 @@
+
+#include <cmath>
+#include "config.h"
+#include "strategy_monte.h"
+#include "random.h"
+#include "stream_printf.h"
+
+// static data members
+const char *Strategy_Monte::c_type = "monte";
+const char *Strategy_Monte::c_param_temp = "temperature";
+const char *Strategy_Monte::c_param_candidates = "number";
+const double Strategy_Monte::c_default_temp = 1.0;
+const int Strategy_Monte::c_default_candidates = 1;
+
+Strategy_Monte::Strategy_Monte()
+	: m_temp(c_default_temp), m_candidates(c_default_candidates)
+{
+}
+
+Strategy_Monte::~Strategy_Monte()
+{
+}
+
+bool Strategy_Monte::parse_parameter(const std::string &name,
+    const std::string &value)
+{
+	std::string full_name = Strategy::config_section();
+	full_name += " ";
+	full_name += c_type;
+
+    if (name == c_param_temp)
+    {
+		set_temperature(parse_double(value, full_name, 0.0));
+        return true;
+    }
+	else
+	if (name == c_param_candidates)
+	{
+		set_num_candidates(parse_integer(value, full_name, 1));
+		return true;
+	}
+
+    return false;
+}
+
+void Strategy_Monte::verify_parameters()
+{
+}
+
+void Strategy_Monte::set_temperature(double val)
+{
+	m_temp = val;
+}
+
+void Strategy_Monte::set_num_candidates(int num)
+{
+	m_candidates = num;
+}
+
+int Strategy_Monte::select(double old_score, const Double_Vec &new_score)
+{
+	double best_score = 0.0;
+	int best = -1;
+
+	for (unsigned int n = 0;n < new_score.size();n++)
+	{
+		// Monte Carlo criterion:
+		//
+		// Probability of acceptance = exp(-(change in score) * temperature)
+		// (assumes lower scores are better)
+
+		double change = new_score[n] - old_score;
+
+		if (change <= 0.0 || Random::rnd(1.0) < exp(-change / m_temp))
+		{
+			/*if (change > 0.0)
+				std::cout << "Accepted unfavourable change!\n" << "Change: " << change << "\nExponential: " << exp(-change / m_temp) << "\n";
+			else
+				std::cout << "Did not accept unfavourable change!\n";*/
+			if (best == -1 || new_score[n] < best_score)
+			{
+				best_score = new_score[n];
+				best = n;
+			}
+		}
+	}
+
+	return best;
+}
+
+void Strategy_Monte::start_run(Runner *runner)
+{
+}
+
+void Strategy_Monte::end_run(Runner *runner)
+{
+}
+
+bool Strategy_Monte::stop()
+{
+	return false;
+}
+
+void Strategy_Monte::print_template(std::ostream &out,
+	bool commented /*= true*/)
+{
+	const char *c = (commented ? "#" : "");
+
+	out << c << "type = " << c_type << "\n"
+		<< c << c_param_temp << " = "
+			<< Printf("%.1f", c_default_temp) << "\n"
+		<< c << c_param_candidates << " = " << c_default_candidates << "\n"
+		<< "\n";
+}
+

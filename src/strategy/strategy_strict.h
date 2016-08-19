@@ -1,0 +1,70 @@
+
+#ifndef STRATEGY_STRICT_H_INCLUDED
+#define STRATEGY_STRICT_H_INCLUDED
+
+#include "strategy.h"
+
+// A "greedy" score improvement strategy; only moves that improve
+// the score are accepted.
+
+class Strategy_Strict : public Strategy
+{
+public:
+	// constructor
+	Strategy_Strict();
+
+	// destructor
+	virtual ~Strategy_Strict();
+
+	/// Parse a config file parameter. Returns false if the parameter
+	/// is not recognised.
+    virtual bool parse_parameter(const std::string &name,
+        const std::string &value);
+
+    // verify that the parameters are consistent and complete
+    // (otherwise exits with an error message)
+    virtual void verify_parameters();
+
+	// get the number of candidate peptides required
+	virtual int num_candidates()
+	{ return m_candidates; }
+
+	// returns 0 to accept the peptide or -1 to reject it
+	virtual int select(
+        double old_score,            // in - previous peptide's score
+        const Double_Vec &new_score   // in - new peptide score
+                                    //      (vector is always length 1)
+    );
+
+	// called when a new run is about to start (before the first move)
+	virtual void start_run(Runner *runner);
+
+	// called after run is ended
+	virtual void end_run(Runner *runner);
+
+	// check whether it is time to stop making moves
+	virtual bool stop();
+
+	// set the number of candidate peptides to try at once
+	void set_num_candidates(int num);
+
+	// "type" value in config file
+    static const char *type()
+    { return c_type; }
+
+	// print sample config file parameters
+    static void print_template(std::ostream &out, bool commented = true);
+
+private:
+    // config file parameters
+    static const char *c_type;
+	static const char *c_param_candidates;
+
+	// default parameter values
+	static const int c_default_candidates;
+
+	int m_candidates;			// number of candidates to try at once
+};
+
+#endif // STRATEGY_STRICT_H_INCLUDED
+

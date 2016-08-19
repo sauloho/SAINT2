@@ -1,0 +1,1 @@
+../create_dgen_data ~/pisces2 ~/pisces2/final_list 2>out > dgen.data

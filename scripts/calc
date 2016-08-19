@@ -1,0 +1,10 @@
+# evaluate an expression using awk
+#
+# eg. calc '(2 + 3) * 4'
+# eg. calc 'sin(pi/2)^3'
+
+echo | awk '
+BEGIN { pi = 3.1415926535898; }
+function rad2deg(r) { return (r / pi) * 180; }
+function deg2rad(d) { return (d / 180) * pi; }
+{ print '"$*"'; }'

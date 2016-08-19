@@ -1,0 +1,74 @@
+
+if [ $# -lt 2 ]
+then
+	echo "Usage: $0 pdb_file prefix directory [ directory2 directory3 ... ]
+
+Finds the top $TOP scoring decoys in the specified directories
+(files are assumed to start with the specified prefix), then calculates the
+TM-Score between these decoys and the actual structure provided in pdb_file.
+
+Input:
+
+-\"pdb_file\" is the path to the PDB file containing the actual protein structure.
+-\"prefix is\" the prefix of the decoy files.
+-\"directory\" is the path to the dir containing the decoy files.
+
+Files generated:
+
+-res_scores: A sorted table with the scores of each decoy.
+
+Files are generated in the directory provided at input.
+" 1>&2
+exit 1
+fi
+
+if [ -z "$SAINT2" ]
+then
+
+	export SAINT2=/homes/oliveira/saint2_orig
+fi
+
+pdb=$1
+prefix=$2
+dir=$3
+config=$4
+
+
+# score all structures in all directories
+
+# find the top scoring structures and get their TM-score
+
+if [ ! -d $dir ]
+then
+	echo "$0: cannot find directory $dir" 1>&2
+	exit 1
+fi
+
+cd $dir
+i=1
+for OUTPUT in $(find -name "$prefix*")
+do
+	echo "Scoring decoy $i for protein $OUTPUT." >&2
+	TM=`$SAINT2/../TMalign $OUTPUT $pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }'`
+#	ENERGY=`$SAINT2/bin/score_pdb2 $OUTPUT $config`
+	$SAINT2/bin/saint2 $config -- $OUTPUT > $OUTPUT.temp
+	if [ "$?" = "0" ]; then
+		#SOLV=`cat $OUTPUT.temp | awk '/^Solvation =/ { print $NF; }'`
+		#ORIE=`cat $OUTPUT.temp | awk '/^Orientation =/ { print $NF; }'`
+		#LJ=`cat $OUTPUT.temp | awk '/^Lennard-Jones =/ { print $NF; }'`
+		#RAPDF=`cat $OUTPUT.temp | awk '/^RAPDF =/ { print $NF; }'`
+		#SAULO=`cat $OUTPUT.temp | awk '/^Saulo =/ { print $NF; }'`
+		COMB=`cat $OUTPUT.temp | awk '/^Combined score =/ { print $NF; }'`
+		#RG=`cat $OUTPUT.temp | awk '/^Radius of gyration =/ { print $NF; }'`
+		#DIAM=`cat $OUTPUT.temp | awk '/^Diameter =/ { print $NF; }'`
+		#~/dssp $OUTPUT > $OUTPUT.dssp_temp
+		##EXTRA=`python ~/dssp.py $OUTPUT.dssp_temp $prefix`
+		#rm $OUTPUT.dssp_temp
+#		echo "$TM $OUTPUT $SOLV $ORIE $LJ $RAPDF $SAULO $COMB $RG $DIAM $EXTRA"
+	        echo "$TM $OUTPUT $COMB"
+	fi
+	rm $OUTPUT.temp
+	i=`expr $i + 1`
+done
+cd ..
+

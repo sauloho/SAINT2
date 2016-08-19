@@ -1,0 +1,36 @@
+
+# print the full pathname of a file or directory
+# (prints "-" if the path includes a nonexistent directory)
+
+if [ $# != 1 ]
+then
+	echo "Usage: $0 filename
+
+Prints the full pathname of a file or directory
+" 1>&2
+exit 1
+fi
+
+if [ -d $1 ]
+then
+	cd $1
+	pwd
+	exit 0
+fi
+
+# remove the end part (the filename itself)
+
+name=`echo $1 | sed 's/.*\///g'`
+f=`echo $1 | sed 's/[^\/][^\/]*$//g'`
+
+if [ -z "$f" ]
+then
+	echo "`pwd`/$name"
+elif [ -d $f ]
+then
+	cd $f
+	echo "`pwd`/$name"
+else
+	echo "-"
+fi
+

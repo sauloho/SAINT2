@@ -1,0 +1,64 @@
+// -*- mode: c++; c-file-style: "ellemtel"; encoding: utf-8; -*-
+//
+// Copyright (C) 2012 Saulo H. P. de Oliveira
+//
+// Saulo H. P. de Oliveira <saulo.deoliveira@pmb.ox.ac.uk>
+// 2012-08-22
+//
+// Crowding scoring method.
+//
+// This "very intrincated" scoring system gives a penalty for every pair of C-alphas  
+// that is more than 30 Angstroms apart. The idea is to simulate a Crowding effect.
+// 
+
+#include <string>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
+#include <iostream>
+#include <fstream>
+
+#include "peptide.h"
+#include "atom.h"
+#include "scorer_combined.h"
+#include "crowding.h"
+
+Crowding::Crowding()
+{
+}
+
+Crowding::~Crowding()
+{
+}
+
+double Crowding::score(const Peptide& p, bool verbose) const
+{
+	int len = p.length();	
+	double total=0.0, penalty=1.0;
+
+	for (int i = p.start();i <= p.end();i++)
+		for (int j = p.start();j <= p.end();j++)
+			if (p.atom_exists(i,Atom_CA) && p.atom_exists(j,Atom_CA) )
+			{
+				Point ca_i = p.atom_pos(i, Atom_CA);
+				Point ca_j = p.atom_pos(j, Atom_CA);
+				//std::cout << i << "  " << j << "\t" << ca_i.distance(ca_j) << "\n";
+				if ( ca_i.distance(ca_j) > 40.0 )
+					total += penalty;
+			}
+	
+
+#ifndef RAW_SCORE
+
+	// Alter the score so that it has about the same distribution
+	// for all lengths
+	total /= sqrt((double) len);
+	// normalise so that all score types have approximately the same range
+	//total = total * 28.0 + 50.0;
+	
+#endif // RAW_SCORE
+
+	//std::cout << "Total = " << total << " !!\n";	
+	return total;
+}
+

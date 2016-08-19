@@ -1,0 +1,17 @@
+
+# extract the codon sequence from a file (codons are assumed to be the
+# second comma-separated field) and output it in FASTA format
+
+cat $1 | awk -F, '
+BEGIN \
+{
+	print "> from '"$1"'";
+	n = 0;
+}
+
+{
+	if (n % 20 == 0 && n != 0) { printf "\n"; }
+	n++;
+	printf "%s", $2;
+}
+END { printf "\n"; }'

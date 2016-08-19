@@ -1,0 +1,88 @@
+TOP=1000
+
+if [ $# -lt 2 ]
+then
+	echo "Usage: $0 pdb_file prefix directory [ directory2 directory3 ... ]
+
+Finds the top $TOP scoring decoys in the specified directories
+(files are assumed to start with the specified prefix), then calculates the
+TM-Score between these decoys and the actual structure provided in pdb_file.
+
+Input:
+
+-\"pdb_file\" is the path to the PDB file containing the actual protein structure.
+-\"prefix is\" the prefix of the decoy files.
+-\"directory\" is the path to the dir containing the decoy files.
+
+Files generated:
+
+-res_scores: A sorted table with the scores of each decoy.
+-decoyXX: A pdb file for a decoy, where XX is the ranking of that decoy in the table\n
+		  depicted in res_scores.
+
+Files are generated in the directory provided at input.
+" 1>&2
+exit 1
+fi
+
+if [ -z "$SAINT2" ]
+then
+
+	export SAINT2=/home/markov/oliveira/saint2_orig
+fi
+
+pdb=$1
+shift
+prefix=$1
+shift
+
+# score all structures in all directories
+
+echo "Finding scores ..." 1>&2
+
+for dir in $*
+do
+	if [ ! -d $dir ]
+	then
+		echo "$0: cannot find directory $dir" 1>&2
+		exit 1
+	fi
+
+	cd $dir
+	rm -f ./res_scores
+
+	for i in $prefix*
+	do
+		echo "`$SAINT2/bin/score_pdb $i` $dir/$i" >> ./res_scores
+	done
+
+	sort -n res_scores > tmp_scores
+	mv tmp_scores res_scores
+
+	cd ..
+
+done
+
+
+
+# find the top scoring structures and get their TM-score
+
+for dir in $*
+do
+	if [ ! -d $dir ]
+	then
+		echo "$0: cannot find directory $dir" 1>&2
+		exit 1
+	fi
+	cd $dir
+
+	j=0
+	for i in `head -$TOP res_scores -n 1000 | awk '{ print $2; }'`
+	do
+		j=`expr $j + 1`
+		cp $i decoy$j
+		$SAINT2/3rdparty/TMscore decoy$j $pdb | awk '/^TM-score    =/ { print $3; }'
+	done
+	cd ..
+done
+

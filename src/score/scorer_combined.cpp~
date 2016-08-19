@@ -1,0 +1,432 @@
+
+#include <cmath>
+
+#include <cstdlib>
+#include <iostream>
+#include <cassert>
+#include "scorer_combined.h"
+#include "common.h"
+#include "atom.h"
+#include "peptide.h"
+#include "c_file.h"
+#include "stream_printf.h"
+#include "rapdf.h"
+#include "solvation.h"
+#include "torsion.h"
+#include "hbond.h"
+#include "saulo.h"
+#include "core.h"
+#include "predss.h"
+#include "rgyr.h"
+#include "contact.h"
+#include "crowding.h"
+#include "randomscr.h"
+#include "orientation.h"
+#include "lennard_jones.h"
+#include "ribosome.h"
+
+
+// static data members
+const char *Scorer_Combined::c_type = "combined";
+
+const char *Scorer_Combined::c_score_name[SC_NUM] =
+{
+	"Solvation",				// SC_SOLV
+	"Orientation",				// SC_ORIENT
+	"Lennard-Jones",			// SC_LJ
+	"RAPDF",					// SC_RAPDF
+	"HBond",					// SC_HBOND
+	"Saulo",					// SC_SAULO
+	"CORE",						// SC_CORE
+	"PredSS",					// SC_PREDSS
+	"Rgyr",						// SC_RGYR
+	"Contact",					// SC_CONTACT
+	"Crowding",					// SC_CROWD
+	"Randomscr",				// SC_RANDSCR
+	"Torsion",					// SC_TOR
+	"Ribosome"					// SC_RIBO
+};
+
+const char *Scorer_Combined::c_param_filename[SC_NUM] =
+{
+	"long_solvation_file", 	// SC_SOLV
+	"long_orientation_file",// SC_ORIENT
+	"", 					// SC_LJ
+	"long_rapdf_file", 		// SC_RAPDF
+	"", 					// SC_HBOND
+	"long_saulo_file",		// SC_SAULO
+	"", 					// SC_CORE
+	"long_predss_file",		// SC_PREDSS
+	"",						// SC_RGYR
+	"long_contact_file",	// SC_CONTACT
+	"",						// SC_CROWD
+	"",						// SC_RANDSCR
+	"long_torsion_file", 	// SC_TOR
+	""						// SC_RIBO
+};
+
+const char *Scorer_Combined::c_param_short_filename[SC_NUM] =
+{
+	"short_solvation_file", 		// SC_SOLV
+	"short_orientation_file",		// SC_ORIENT
+	"", 							// SC_LJ
+	"short_rapdf_file", 			// SC_RAPDF
+	"", 							// SC_HBOND
+	"short_saulo_file",				// SC_SAULO
+	"", 							// SC_CORE
+	"short_predss_file",				// SC_PREDSS
+	"",								// SC_RGYR
+	"short_contact_file",			// SC_CONTACT
+	"", 							// SC_CROWD
+	"", 							// SC_RANDSCR
+	"short_torsion_file",			// SC_TOR
+	""								// SC_RIBO	
+};
+
+const char *Scorer_Combined::c_param_weight[SC_NUM] =
+{
+	"long_weight_solvation",	// SC_SOLV
+	"long_weight_orientation",	// SC_ORIENT
+	"long_weight_lj",			// SC_LJ
+	"long_weight_rapdf",		// SC_RAPDF
+	"long_weight_hbond",		// SC_HBOND
+	"long_weight_saulo",		// SC_SAULO
+	"long_weight_core",			// SC_CORE
+	"long_weight_predss",		// SC_PREDSS
+	"long_weight_rgyr",			// SC_RGYR
+	"long_weight_contact",		// SC_CONTACT
+	"long_weight_crowding",		// SC_CROWD
+	"long_weight_randomscr",	// SC_RANDSCR
+	"long_weight_torsion",		// SC_TOR
+	"weight_ribosome"			// SC_RIBO
+};
+
+const char *Scorer_Combined::c_param_short_weight[SC_NUM] =
+{
+	"short_weight_solvation",		// SC_SOLV
+	"short_weight_orientation",		// SC_ORIENT
+	"short_weight_lj",				// SC_LJ
+	"short_weight_rapdf",			// SC_RAPDF
+	"short_weight_hbond",			// SC_HBOND
+	"short_weight_saulo",			// SC_SAULO
+	"short_weight_core",			// SC_CORE
+	"short_weight_predss",			// SC_PREDSS
+	"short_weight_rgyr",			// SC_RGYR
+	"short_weight_contact",			// SC_CONTACT
+	"short_weight_crowding",		// SC_CROWD
+	"short_weight_randomscr",		// SC_RANDSCR
+	"short_weight_torsion",			// SC_TOR
+	// short ribosome weight will be set to the same as the long one
+	""								// SC_RIBO
+};
+
+Scorer_Combined::Scorer_Combined()
+{
+	m_solvation = new Solvation;
+	m_orientation = new Orientation;
+	m_lj = new Lennard_Jones;
+	m_rapdf = new RAPDF;
+	m_hbond = new HBond;
+	m_saulo = new Saulo;
+	m_core = new CORE;
+	m_predss = new PredSS;
+	m_rgyr = new Rgyr;
+	m_contact = new Contact;
+	m_crowding = new Crowding;
+	m_randomscr = new Randomscr;
+	m_torsion = new Torsion;
+	m_ribosome = new Ribosome;
+
+	for (int n = 0;n < SC_NUM;n++)
+	{
+		// Note: ribosome weight is always m_weight[] (short weight ignored)
+		m_weight[n] = m_short_weight[n] = 1.0;
+	}
+}
+
+Scorer_Combined::~Scorer_Combined()
+{
+	delete m_solvation;
+	delete m_orientation;
+	delete m_lj;
+	delete m_rapdf;
+	delete m_hbond;
+	delete m_saulo;
+	delete m_core;
+	delete m_predss;
+	delete m_rgyr;
+	delete m_contact;
+	delete m_crowding;
+	delete m_randomscr;
+	delete m_torsion;
+	delete m_ribosome;
+}
+
+bool Scorer_Combined::parse_parameter(const std::string &name,
+    const std::string &value)
+{
+	std::string full_name = Scorer::config_section();
+	full_name += " ";
+	full_name += name;
+
+	for (int n = 0;n < SC_NUM;n++)
+	{
+		if (name == c_param_filename[n])
+		{
+			switch (n)
+			{
+				case SC_SOLV:
+					m_solvation->set_long_data_file(value);
+					break;
+				case SC_ORIENT:
+					m_orientation->set_long_data_file(value);
+					break;
+				case SC_RAPDF:
+				{
+					m_core->set_long_data_file(value);
+					m_rapdf->set_long_data_file(value);
+					break;
+				}
+				case SC_TOR:
+					m_torsion->set_long_data_file(value);
+					break;
+				case SC_SAULO:
+					m_saulo->set_long_data_file(value);
+					break;
+				case SC_PREDSS:
+					m_predss->set_long_data_file(value);
+					break;
+				case SC_CONTACT:
+					m_contact->set_long_data_file(value);
+					break;
+				default:
+					assert(!"case not handled getting score filename");
+			}
+
+			return true;
+		}
+
+		if (name == c_param_short_filename[n])
+		{
+			switch (n)
+			{
+				case SC_SOLV:
+					m_solvation->set_short_data_file(value);
+					break;
+				case SC_ORIENT:
+					m_orientation->set_short_data_file(value);
+					break;
+				case SC_RAPDF:
+				{
+					m_core->set_short_data_file(value);
+					m_rapdf->set_short_data_file(value);
+					break;
+				}
+				case SC_TOR:
+					m_torsion->set_short_data_file(value);
+					break;
+				case SC_SAULO:
+					m_saulo->set_short_data_file(value);
+					break;
+				case SC_PREDSS:
+					m_predss->set_short_data_file(value);
+					break;
+				case SC_CONTACT:
+					m_contact->set_short_data_file(value);
+					break;
+				default:
+					assert(!"case not handled getting short score filename");
+			}
+
+			return true;
+		}
+
+		if (name == c_param_weight[n])
+		{
+			m_weight[n] = parse_double(value, full_name);
+
+			if (n == SC_RIBO)
+			{
+				// short weight is the same as long weight for ribosome
+				m_short_weight[n] = m_weight[n];
+			}
+
+			return true;
+		}
+
+		if (name == c_param_short_weight[n])
+		{
+			m_short_weight[n] = parse_double(value, full_name);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void Scorer_Combined::set_long_weight(Score_Term s, double val)
+{
+	m_weight[s] = val;
+
+	// short and long weight are always the same for the ribosome
+	if (s == SC_RIBO) { m_short_weight[s] = val; }
+}
+
+void Scorer_Combined::set_short_weight(Score_Term s, double val)
+{
+	m_short_weight[s] = val;
+
+	// short and long weight are always the same for the ribosome
+	if (s == SC_RIBO) { m_weight[s] = val; }
+}
+
+void Scorer_Combined::verify_parameters()
+{
+}
+
+void Scorer_Combined::print_desc(std::ostream &out)
+{
+	out << "Combined";
+
+	/*
+	m_rapdf->print_desc(out);
+	out << ", ";
+	m_solvation->print_desc(out);
+	out << ", ";
+	m_torsion->print_desc(out);
+	out << ", ";
+	m_hbond->print_desc(out);
+	out << ", ";
+	m_orientation->print_desc(out);
+	*/
+}
+
+/*
+void waste_time()
+{
+	for (int n = 0;n < 35000;n++)
+	{
+		srand((int) cos(n * 234.3242) * 342);
+	}
+}
+*/
+
+double Scorer_Combined::score(const Peptide &p, double progress /*= 1.0*/,
+	double *progress1_score /*= NULL*/)
+{
+	double total = 0.0;
+	bool info_on = print_info_when_scoring();
+	double s = 0.0;
+
+
+	bool vbose = verbose();
+
+	double weight_rapdf = (p.length() <= SHORT_PEPTIDE ?
+			m_short_weight[SC_RAPDF] : m_weight[SC_RAPDF]);
+
+	double weight_lj = (p.length() <= SHORT_PEPTIDE ?
+			m_short_weight[SC_LJ] : m_weight[SC_LJ]);
+
+	for (int n = 0;n < SC_NUM;n++)
+	{
+		double w = (p.length() <= SHORT_PEPTIDE ?
+			m_short_weight[n] : m_weight[n]);
+
+
+
+		if (w != 0.0 && n != SC_RAPDF && n!= SC_LJ)
+		{
+			switch (n)
+			{
+				case SC_SOLV:	s = m_solvation->score(p, vbose); break; 
+				case SC_ORIENT:	s = m_orientation->score(p, vbose); break; 
+				case SC_LJ:		s = m_lj->score(p, vbose); break;
+				case SC_RAPDF:	s = m_rapdf->score(p, vbose); break; 
+				case SC_HBOND:	s = m_hbond->score(p, vbose); break;
+				case SC_SAULO:	s = m_saulo->score(p, vbose); break;
+				case SC_CORE:	s = m_core->score(p, weight_rapdf,weight_lj, vbose); break;
+				case SC_PREDSS: s = m_predss->score(p, vbose); break;
+				case SC_RGYR:	s = m_rgyr->score(p, vbose); break;
+				case SC_CONTACT:s = m_contact->score(p, vbose); break;
+				case SC_CROWD:	s = m_crowding->score(p, vbose); break;
+				case SC_RANDSCR:s = m_randomscr->score(p, vbose); break;    
+				case SC_TOR:	s = m_torsion->score(p, vbose); break; 
+				case SC_RIBO:	s = m_ribosome->score(p, vbose); break; 
+				default:
+					assert(!"case not handled in Scorer_Combined::score()");
+					s = 0.0;
+			}
+
+			s *= w;
+
+
+			if (info_on)
+			{
+				std::cout << c_score_name[n] << " = " << s << "\n";
+			}
+
+			total += s;
+		}
+	}
+
+	if (progress1_score != NULL)
+	{
+		*progress1_score = total;
+	}
+
+	return total;
+}
+
+void Scorer_Combined::print_template(std::ostream &out,
+	 bool commented /*= true*/)
+{
+	const char *c = (commented ? "#" : "");
+
+    out << c << "type = " << c_type << "\n\n";
+
+	int n;
+	for (n = 0;n < SC_NUM;n++)
+	{
+		if (*c_param_filename[n])
+		{
+			out << c << c_param_filename[n] << " = ...\n";
+		}
+	}
+
+	out << "\n";
+
+	for (n = 0;n < SC_NUM;n++)
+	{
+		if (*c_param_short_filename[n])
+		{
+			out << c << c_param_short_filename[n] << " = ...\n";
+		}
+	}
+
+	out << "\n";
+
+	for (n = 0;n < SC_NUM;n++)
+	{
+		if (*c_param_weight[n])
+		{
+			out << c << c_param_weight[n] << " = 1.0\n";
+		}
+	}
+
+	out << "\n";
+
+	for (n = 0;n < SC_NUM;n++)
+	{
+		if (*c_param_short_weight[n])
+		{
+			out << c << c_param_short_weight[n] << " = 1.0\n";
+		}
+	}
+
+	out << "\n";
+}
+
+void Scorer_Combined::dump(std::ostream &out /*=std::cout*/)
+{
+}
+

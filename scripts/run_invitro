@@ -1,0 +1,102 @@
+
+RESULTS_PER_DIR=1000
+
+if [ -z "$SAINT2" ]
+then
+	echo "$0: Please define the variable SAINT2 as the base Saint 2 directory (one up from the \"bin\" directory), eg:
+	export SAINT2=\$HOME/saint2" 1>&2
+fi
+
+if [ $# -ne 6 ]
+then
+cmd=`echo $0 | sed 's/.*\///g'`
+echo "Usage: $cmd num_runs pdb_id fasta_file library moves temperature
+
+Parameters are as follows:
+
+num_runs         Number of runs to perform (structures to generate)
+fasta_file       Amino acid sequence
+library          Fragment library
+moves            Number of moves to perform
+temperature      Monte Carlo + Metropolis Criterion temperature (eg. 2.5)
+" 1>&2
+exit 0
+fi
+
+runs="$1"
+id="$2"
+shift; shift
+
+if echo "$runs" | grep -q -v '^[0-9][0-9]*$'
+then
+    echo "$0: Illegal number of runs: $runs" 1>&2
+    exit 1
+fi
+
+if [ \( "$runs" = 0 \) -o \( "$runs" -gt 100000 \) ]
+then
+    echo "$0: Illegal number of runs: $runs (range is 1-100000)" 1>&2
+    exit 1
+fi
+
+config=`$SAINT2/bin/create_config "$id" i $*`
+
+if [ $? != 0 ]
+then
+	# error message already printed
+	exit 1
+fi
+
+# prefix of results files
+
+out_prefix=`echo $config | sed 's/^config_//g'`
+
+if [ ! -d $out_prefix ]
+then
+	mkdir $out_prefix
+fi
+
+cd $out_prefix
+
+# results are put in directories 0, 1, 2, etc. -- check if any exist already;
+# if so, start from the next highest number
+
+dir=0
+
+while [ \( -d $dir \) -o \( -f $dir \) ]
+do
+	dir=`expr $dir + 1`
+done
+
+maxdir=`echo $dir $runs $RESULTS_PER_DIR | awk '{ print $1 + int(($2 - 1) / $3); }'`
+
+dirlist=`$SAINT2/bin/val $dir $maxdir`
+
+for i in $dirlist
+do
+	mkdir $i
+done
+
+for i in $dirlist
+do
+	cd $i
+
+	# set r to the number of runs for this directory
+
+	if [ $i = $maxdir ]
+	then
+		r=`echo $runs $RESULTS_PER_DIR | awk '{ n = $1 % $2; if (n == 0) { n = $2; } print n; }'`
+	else
+		r=$RESULTS_PER_DIR
+	fi
+
+	bsub $SAINT2/bin/run_then_finish $SAINT2/bin/do_cmd_outfile err_$i $SAINT2/bin/saint2 ../../$config -n $r -s $i -o ${out_prefix}_s$i
+
+	cd ..
+done
+
+# wait until all of the above saint2 runs have finished, then cluster
+# the results
+
+bsub $SAINT2/bin/wait_for_file `echo $dir $maxdir | awk '{ for (n = $1;n <= $2;n++) print n "/finished"; }'` -- $SAINT2/bin/cluster_results $out_prefix $dirlist
+

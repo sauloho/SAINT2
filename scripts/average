@@ -1,0 +1,8 @@
+# find the average of the first field in the input
+
+awk '{ t += $1; }
+END \
+{
+   if (t == 0) { print "-"; } \
+   else { printf "%f\n", (t + 0.0) / NR; }
+}' "$@"

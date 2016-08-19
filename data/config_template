@@ -1,0 +1,100 @@
+[Sequence]
+
+type = amino			# "amino" or "nucleotide"
+file = @FASTA		# filename (FASTA format)
+#seq = ...		# sequence
+#index = 0		# index of sequence in FASTA file (starting from 0)
+#id = ...		# id of sequence in FASTA file
+
+[General]
+
+sequential = @COTRANS	# whether is sequential or non-sequential
+moves = @MOVES		# move limit (excluding growth phase)
+#none selected = 0	# stop after none selected this many times in a row
+reverse = false         # whether to extrude in reverse order (C first)
+#start_structure = ...		# Starting structure (PDB file)
+
+[Extension]
+
+type = fixed
+
+#type = codon
+#codonfile = ...	# codon speed file
+#multiplier = 1.0	# multiplication factor (codon speed to #moves)
+#tunnel_length = 70  # number of residues in tunnel (delay)
+
+initial = 9			# initial number of residues extruded
+extrude = 1			# number of residues to extrude at a time
+growth_moves = @GMOVES		# max moves between extrusions
+
+# distribution of max moves between extrusions ("fixed" or "linear")
+move_distribution = linear
+
+#none selected = 0	# extrude after none selected this many times in a row
+
+[Scoring]
+
+type = combined
+
+# "long" = longer than 150 residues
+# "short" = less than or equal to 150 residues
+
+long_rapdf_file = ../data/long_rapdf.data
+long_solvation_file = ../data/long_solv.data
+long_torsion_file = ../data/long_torsion.data
+long_orientation_file = ../data/long_orient.data
+long_saulo_file = ../data/foo.con
+long_contact_file = ../data/foo.cmap
+
+short_rapdf_file = ../data/short_rapdf.data
+short_solvation_file = ../data/short_solv.data
+short_torsion_file = ../data/short_torsion.data
+short_orientation_file = ../data/short_orient.data
+short_saulo_file = ../data/foo.con
+short_contact_file = ../data/foo.cmap
+
+weight_ribosome = @RIBOSOME
+
+# correlation      = 
+long_weight_rapdf       = 0.303
+long_weight_solvation   = 0.282
+long_weight_lj          = 0.304
+long_weight_hbond       = 0
+long_weight_saulo 	= 0
+long_weight_rgyr 	= 0
+long_weight_contact	= 1.0
+long_weight_crowding	= 0
+long_weight_randomscr	= 0
+long_weight_orientation = 0.111
+long_weight_torsion     = 0
+
+# correlation      = 
+sshort_weight_rapdf       = 0.156
+short_weight_solvation   = 0.262
+short_weight_lj          = 0.505
+short_weight_hbond       = 0
+short_weight_saulo 	 = 0
+short_weight_rgyr 	 = 0
+short_weight_contact	 = 1.0
+short_weight_crowding	 = 0
+short_weight_randomscr	 = 0
+short_weight_orientation = 0.077
+
+[Strategy]
+
+#type = strict
+#number = 1
+
+type = monte
+temperature = @TEMP
+number = 1
+
+#type = boltz
+#temperature = 1.0
+#number = 10
+
+[Movement]
+
+type = fragment
+lib = @LIB		# fragment library location
+

@@ -1,0 +1,4 @@
+# put the input all on one line
+
+awk '{ if (NR > 1) { printf " "; } printf "%s", $0; } END { printf "\n"; }' "$@"
+
