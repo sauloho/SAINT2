@@ -73,5 +73,5 @@ while [ $runs -gt 0 ] ; do
 	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../$config -n 1 -s $i -o ${out_prefix}_s${i}_r$runs_p$$
 	runs=`expr $runs - 1`
 done
-#runs2=`expr $runs + 1`
+runs=`expr $runs + 1`
 echo ${out_prefix}_s${i}_r$runs_p$$
