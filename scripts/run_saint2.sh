@@ -16,7 +16,7 @@ FILE=`$SAINT2/scripts/run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DAT
 
 ### GET THE SCORES OF THE FINAL DECOY THAT HAS BEEN GENERATED ###
 TM=$($SAINT2/3rdparty/TMalign $OUTPUT_c_n*flib_1*linear/"$FILE" $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
-$SAINT2/bin/saint2 $DATA_PATH/config_"$OUTPUT"_c_n*linear -- "$OUTPUT"_c_n*flib_1*linear/"$FILE" > $OUTPUT.temp$$
+$SAINT2/bin/saint2 config_"$OUTPUT"_c_n*linear -- "$OUTPUT"_c_n*flib_1*linear/"$FILE" > $OUTPUT.temp$$
 if [ "$?" = "0" ]; then
         SOLV=`cat $OUTPUT.temp$$ | awk '/^Solvation =/ { print $NF; }'`
         ORIE=`cat $OUTPUT.temp$$ | awk '/^Orientation =/ { print $NF; }'`
@@ -38,7 +38,7 @@ rm $OUTPUT.temp$$
 # IN VITRO
 FILE=`$SAINT2/scripts/run_invitro2 1 $OUTPUT $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib 11000 2.5` 
 TM=$($SAINT2/3rdparty/TMalign $OUTPUT_i*flib_1*/"$FILE" $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
-$SAINT2/bin/saint2 $DATA_PATH/config_"$OUTPUT"_i*flib* -- "$OUTPUT"_i*flib_1*/"$FILE" > $OUTPUT.temp$$
+$SAINT2/bin/saint2 config_"$OUTPUT"_i*flib* -- "$OUTPUT"_i*flib_1*/"$FILE" > $OUTPUT.temp$$
 if [ "$?" = "0" ]; then
         SOLV=`cat $OUTPUT.temp$$ | awk '/^Solvation =/ { print $NF; }'`
         ORIE=`cat $OUTPUT.temp$$ | awk '/^Orientation =/ { print $NF; }'`
@@ -60,7 +60,7 @@ rm $OUTPUT.temp$$
 # REVERSE
 FILE=`$SAINT2/scripts/run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH//$OUTPUT.flib 10000 1000 2.5 linear rev`
 TM=$($SAINT2/3rdparty/TMalign $OUTPUT_c_n*flib_1*rev/"$FILE" $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
-$SAINT2/bin/saint2 $DATA_PATH/config_"$OUTPUT"_c_n*rev -- "$OUTPUT"_c_n_*flib_1*rev/"$FILE" > $OUTPUT.temp$$
+$SAINT2/bin/saint2 config_"$OUTPUT"_c_n*rev -- "$OUTPUT"_c_n_*flib_1*rev/"$FILE" > $OUTPUT.temp$$
 if [ "$?" = "0" ]; then
         SOLV=`cat $OUTPUT.temp$$ | awk '/^Solvation =/ { print $NF; }'`
         ORIE=`cat $OUTPUT.temp$$ | awk '/^Orientation =/ { print $NF; }'`
