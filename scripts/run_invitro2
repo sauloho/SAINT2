@@ -53,7 +53,7 @@ then
 	mkdir $out_prefix
 fi
 
-cd $out_prefix
+cd $out_prefix > /dev/null
 
 i=0
 while [ \( -f err_s${i} \) -o \( -f ${out_prefix}_s$i \) ] ;
