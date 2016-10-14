@@ -11,7 +11,8 @@ long Random::m_seed = 0;
 
 void Random::set_seed(long seed)
 {
-	m_seed = seed*67+43*sched_getcpu()+37*(int)getpid()+time(NULL);
+	//m_seed = seed*67+43*sched_getcpu()+37*(int)getpid()+time(NULL);
+	m_seed = seed;
 	srand((unsigned) m_seed);
 	srand48(m_seed);
 }

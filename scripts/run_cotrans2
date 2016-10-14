@@ -69,6 +69,7 @@ i=0
 while [ \( -f err_s${i} \) -o \( -f ${out_prefix}_s$i \) ] ;
 do
 	i=`expr $i + 1`
+	echo $i
 done
 
 # SILENT MODE:
@@ -81,8 +82,9 @@ fi
 
 
 while [ $runs -gt 0 ] ; do
-	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../$config -n 1 -s $i -o ${out_prefix}_s${i}_r$runs_p$$
+	$SAINT2/bin/do_cmd_outfile ${err}_$runs $SAINT2/bin/saint2 ../$config -n 1 -s $runs -o ${out_prefix}_s${i}_r${runs}_p$$
 	runs=`expr $runs - 1`
+	echo $runs >> $err
 done
 runs=`expr $runs + 1`
 
