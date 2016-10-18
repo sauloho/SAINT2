@@ -1,4 +1,3 @@
-#!/bin/bash
 if [ -z "$SAINT2" ]
 then
 	echo "$0: Please define the variable SAINT2 as the base Saint 2 directory (one up from the \"bin\" directory), eg:
