@@ -27,7 +27,8 @@ const char *Mover_Fragment::c_param_double_replacement_prob =
 	"double_replacement_prob";
 
 Mover_Fragment::Mover_Fragment()
-	: m_double_replacement_prob(0.0), m_fragments_loaded(false)
+	: m_double_replacement_prob(0.0), m_fragments_loaded(false),
+	  m_first_end_pos(-1)
 {
 }
 

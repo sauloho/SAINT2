@@ -20,6 +20,7 @@
 #include "transform.h"
 #include "stream_printf.h"
 
+
 Mover_Fragment_Fwd::Mover_Fragment_Fwd()
 {
 }
@@ -40,7 +41,7 @@ Fragment *Mover_Fragment_Fwd::random_fragment(int max_end_pos, int *end_pos)
 		max_end_pos = max_frag;
 	}
 
-	int num_possible = max_end_pos - m_first_end_pos + 1;
+	int num_possible = max_end_pos - *p_m_first_end_pos + 1;
 
 	// find a position with at least one fragment in it
 
@@ -54,7 +55,7 @@ Fragment *Mover_Fragment_Fwd::random_fragment(int max_end_pos, int *end_pos)
 			exit(1);
 		}
 
-		*end_pos = rand() % num_possible + m_first_end_pos;
+		*end_pos = rand() % num_possible + *p_m_first_end_pos;
 		num = (int) m_fragment[*end_pos].size();
 	} while (num == 0);
 
@@ -81,6 +82,8 @@ Fragment *Mover_Fragment_Fwd::random_fragment_ending_at(int end_pos)
 
 Fragment *Mover_Fragment_Fwd::get_starting_fragment(int min_length)
 {
+	std::cout << "Start length: " << min_length << "\n";
+
 	if (m_start_fragment.size() == 0)
 	{
 		std::cerr << "Error: no fragments at N terminus\n";
@@ -114,6 +117,17 @@ Fragment *Mover_Fragment_Fwd::get_starting_fragment(int min_length)
 void Mover_Fragment_Fwd::init_sequential(Peptide &p, int initial_length,
 	Run_Observer *observer)
 {
+	// don't limit fragment library use unless we have a long start segment
+	// m_first_end_pos is -1 by default
+	if (initial_length > 9)
+	{
+		// we want the last fragment that we are using to have its end at the end
+		// of the segment. Minus 1 allows segment to be used also.
+		*p_m_first_end_pos = initial_length - 1;
+	}
+
+	std::cout << "In init_sequential -- m_first_end_pos: " << *p_m_first_end_pos << "\n";
+	
 	assert(initial_length > 0);
 	assert(initial_length <= p.full_length());
 	load_fragments(observer);
@@ -427,16 +441,16 @@ void Mover_Fragment_Fwd::after_fragments_loaded(int /*c_terminus*/)
 void Mover_Fragment_Fwd::init_start_fragments()
 {
 	m_start_fragment.clear();
-	m_first_end_pos = -1;
+	// m_first_end_pos = -1;
 
 	// find all fragments that start at position 0
 	// (ie. end at position "pos" and have length "pos + 1")
 
 	for (int pos = 0;pos < (int) m_fragment.size();pos++)
 	{
-		if (m_first_end_pos == -1 && m_fragment[pos].size() != 0)
+		if (*p_m_first_end_pos == -1 && m_fragment[pos].size() != 0)
 		{
-			m_first_end_pos = pos;
+			*p_m_first_end_pos = pos;
 		}
 
 		for (int n = 0;n < (int) m_fragment[pos].size();n++)
@@ -466,7 +480,7 @@ void Mover_Fragment_Fwd::init_distributions()
 
 	m_frag_distrib.resize(m_fragment.size());
 
-	for (pos = m_first_end_pos;pos < m_fragment.size();pos++)
+	for (pos = *p_m_first_end_pos;pos < m_fragment.size();pos++)
 	{
 		for (n = 0;n < m_fragment[pos].size();n++)
 		{

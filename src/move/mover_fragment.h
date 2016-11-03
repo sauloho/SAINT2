@@ -81,6 +81,12 @@ protected:
 	std::string m_lib;			// fragment library
 	double m_double_replacement_prob;	// probability of doing two in a row
 	bool m_fragments_loaded;	// whether fragment library has been read
+
+private:
+	int m_first_end_pos;	// first end position we're using fragments for
+protected:
+	// pointer to first end position we're using fragments for
+	int* p_m_first_end_pos = &m_first_end_pos;
 };
 
 #endif // MOVER_FRAGMENT_H_INCLUDED
