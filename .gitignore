@@ -1,3 +1,10 @@
 *.o
 *.swp
 *.swo
+bin/calc_invitro_moves
+bin/cluster
+bin/convert_fragments
+bin/filter_len_11
+bin/get_fasta
+bin/saint2
+bin/write_pdb
