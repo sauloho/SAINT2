@@ -48,12 +48,13 @@ then
 		CORE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^CORE =/ { print $NF; }'`
 		PREDSS=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredSS =/ { print $NF; }'`
 		SAULO=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Saulo =/ { print $NF; }'`
+		ELEANOR=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Eleanor =/ { print $NF; }'`
 		COMB=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Combined score =/ { print $NF; }'`
 		RG=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Radius of gyration =/ { print $NF; }'`
 		DIAM=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Diameter =/ { print $NF; }'`
 		TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
 		if [ -n "$TM" ]; then
-			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
+			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
 		fi
 	fi
 	rm $HOST/$OUTPUT/temp_$$

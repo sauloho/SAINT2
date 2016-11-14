@@ -14,7 +14,7 @@ INCLUDES=-I main -I move -I score -I strategy -I peptide -I extend
 
 MAIN=main/static_init.cpp main/common.cpp main/random.cpp main/c_file.cpp main/config.cpp main/param_list.cpp main/reporter.cpp main/runner.cpp main/stream_printf.cpp main/point.cpp main/matrix.cpp main/transform.cpp main/parse.cpp main/temp_file.cpp main/distribution.cpp main/geom.cpp main/rmsd.cpp
 MOVE=move/mover.cpp move/mover_fragment.cpp move/mover_fragment_fwd.cpp move/mover_fragment_rev.cpp move/fragment.cpp
-SCORE=score/scorer.cpp score/scorer_combined.cpp score/rapdf.cpp score/rapdf_impl.cpp score/solvation.cpp score/solvation_impl.cpp score/torsion.cpp score/torsion_impl.cpp score/hbond.cpp score/predtor.cpp score/saulo.cpp score/core.cpp score/core_impl.cpp score/predss.cpp score/rgyr.cpp score/contact.cpp score/crowding.cpp score/randomscr.cpp score/orientation.cpp score/orientation_impl.cpp score/lennard_jones.cpp score/ribosome.cpp 
+SCORE=score/scorer.cpp score/scorer_combined.cpp score/rapdf.cpp score/rapdf_impl.cpp score/solvation.cpp score/solvation_impl.cpp score/torsion.cpp score/torsion_impl.cpp score/hbond.cpp score/predtor.cpp score/saulo.cpp score/eleanor.cpp score/core.cpp score/core_impl.cpp score/predss.cpp score/rgyr.cpp score/contact.cpp score/crowding.cpp score/randomscr.cpp score/orientation.cpp score/orientation_impl.cpp score/lennard_jones.cpp score/ribosome.cpp 
 STRATEGY=strategy/strategy.cpp strategy/strategy_strict.cpp strategy/strategy_monte.cpp strategy/strategy_boltz.cpp strategy/strategy_always.cpp
 PEPTIDE=peptide/peptide.cpp peptide/residue.cpp peptide/atom.cpp peptide/sequence.cpp peptide/amino.cpp peptide/codon.cpp peptide/atom_type.cpp peptide/pdb_atom_rec.cpp peptide/conformation.cpp
 EXTEND=extend/extender.cpp extend/extender_fixed.cpp extend/extender_codon.cpp
@@ -307,7 +307,7 @@ score/scorer_combined.o: main/point.h peptide/peptide.h peptide/residue.h
 score/scorer_combined.o: peptide/codon.h main/transform.h main/matrix.h
 score/scorer_combined.o: peptide/conformation.h main/c_file.h
 score/scorer_combined.o: main/stream_printf.h score/rapdf.h score/solvation.h
-score/scorer_combined.o: score/torsion.h score/hbond.h score/saulo.h score/predss.h
+score/scorer_combined.o: score/torsion.h score/hbond.h score/saulo.h score/eleanor.h score/predss.h
 score/scorer_combined.o: score/rgyr.h score/contact.h score/crowding.h score/predtor.h
 score/scorer_combined.o: score/randomscr.h score/orientation.h score/core.h
 score/scorer_combined.o: score/lennard_jones.h score/ribosome.h
@@ -364,7 +364,13 @@ score/saulo.o: peptide/codon.h peptide/atom.h peptide/atom_type.h
 score/saulo.o: peptide/pdb_atom_rec.h main/point.h peptide/peptide.h
 score/saulo.o: main/transform.h main/matrix.h peptide/conformation.h
 score/saulo.o: main/common.h score/scorer_combined.h score/scorer.h
-score/saulo.o: main/param_list.h score/saulo.h
+score/eleanor.o: main/param_list.h score/saulo.h
+score/eleanor.o: peptide/amino.h peptide/atom_id.h peptide/residue.h
+score/eleanor.o: peptide/codon.h peptide/atom.h peptide/atom_type.h
+score/eleanor.o: peptide/pdb_atom_rec.h main/point.h peptide/peptide.h
+score/eleanor.o: main/transform.h main/matrix.h peptide/conformation.h
+score/eleanor.o: main/common.h score/scorer_combined.h score/scorer.h
+score/eleanor.o: main/param_list.h score/eleanor.h
 score/predtor.o: peptide/amino.h peptide/atom_id.h peptide/residue.h
 score/predtor.o: peptide/codon.h peptide/atom.h peptide/atom_type.h
 score/predtor.o: peptide/pdb_atom_rec.h main/point.h peptide/peptide.h
@@ -645,7 +651,7 @@ score/scorer_combined.o: main/point.h peptide/peptide.h peptide/residue.h
 score/scorer_combined.o: peptide/codon.h main/transform.h main/matrix.h
 score/scorer_combined.o: peptide/conformation.h main/c_file.h
 score/scorer_combined.o: main/stream_printf.h score/rapdf.h score/solvation.h
-score/scorer_combined.o: score/torsion.h score/hbond.h score/saulo.h score/predss.h
+score/scorer_combined.o: score/torsion.h score/hbond.h score/saulo.h score/eleanor.h score/predss.h
 score/scorer_combined.o: score/rgyr.h score/contact.h score/crowding.h score/predtor.h
 score/scorer_combined.o: score/randomscr.h score/orientation.h score/core.h
 score/scorer_combined.o: score/lennard_jones.h score/ribosome.h
@@ -703,6 +709,12 @@ score/saulo.o: peptide/pdb_atom_rec.h main/point.h peptide/peptide.h
 score/saulo.o: main/transform.h main/matrix.h peptide/conformation.h
 score/saulo.o: main/common.h score/scorer_combined.h score/scorer.h
 score/saulo.o: main/param_list.h score/saulo.h
+score/eleanor.o: peptide/amino.h peptide/atom_id.h peptide/residue.h
+score/eleanor.o: peptide/codon.h peptide/atom.h peptide/atom_type.h
+score/eleanor.o: peptide/pdb_atom_rec.h main/point.h peptide/peptide.h
+score/eleanor.o: main/transform.h main/matrix.h peptide/conformation.h
+score/eleanor.o: main/common.h score/scorer_combined.h score/scorer.h
+score/eleanor.o: main/param_list.h score/eleanor.h
 score/predtor.o: peptide/amino.h peptide/atom_id.h peptide/residue.h
 score/predtor.o: peptide/codon.h peptide/atom.h peptide/atom_type.h
 score/predtor.o: peptide/pdb_atom_rec.h main/point.h peptide/peptide.h

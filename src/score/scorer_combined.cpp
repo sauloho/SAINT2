@@ -16,6 +16,7 @@
 #include "predtor.h"
 #include "hbond.h"
 #include "saulo.h"
+#include "eleanor.h"
 #include "core.h"
 #include "predss.h"
 #include "rgyr.h"
@@ -38,6 +39,7 @@ const char *Scorer_Combined::c_score_name[SC_NUM] =
 	"RAPDF",					// SC_RAPDF
 	"HBond",					// SC_HBOND
 	"Saulo",					// SC_SAULO
+	"Eleanor",					// SC_ELEANOR
 	"CORE",						// SC_CORE
 	"PredSS",					// SC_PREDSS
 	"Rgyr",						// SC_RGYR
@@ -57,6 +59,7 @@ const char *Scorer_Combined::c_param_filename[SC_NUM] =
 	"long_rapdf_file", 				// SC_RAPDF
 	"", 						// SC_HBOND
 	"long_saulo_file",				// SC_SAULO
+	"long_eleanor_file",				// SC_ELEANOR
 	"", 						// SC_CORE
 	"long_predss_file",				// SC_PREDSS
 	"",						// SC_RGYR
@@ -76,6 +79,7 @@ const char *Scorer_Combined::c_param_short_filename[SC_NUM] =
 	"short_rapdf_file", 				// SC_RAPDF
 	"", 						// SC_HBOND
 	"short_saulo_file",				// SC_SAULO
+	"short_eleanor_file",				// SC_ELEANOR
 	"", 						// SC_CORE
 	"short_predss_file",				// SC_PREDSS
 	"",						// SC_RGYR
@@ -95,6 +99,7 @@ const char *Scorer_Combined::c_param_weight[SC_NUM] =
 	"long_weight_rapdf",		// SC_RAPDF
 	"long_weight_hbond",		// SC_HBOND
 	"long_weight_saulo",		// SC_SAULO
+	"long_weight_eleanor",		// SC_ELEANOR
 	"long_weight_core",		// SC_CORE
 	"long_weight_predss",		// SC_PREDSS
 	"long_weight_rgyr",		// SC_RGYR
@@ -114,6 +119,7 @@ const char *Scorer_Combined::c_param_short_weight[SC_NUM] =
 	"short_weight_rapdf",			// SC_RAPDF
 	"short_weight_hbond",			// SC_HBOND
 	"short_weight_saulo",			// SC_SAULO
+	"short_weight_eleanor",			// SC_ELEANOR
 	"short_weight_core",			// SC_CORE
 	"short_weight_predss",			// SC_PREDSS
 	"short_weight_rgyr",			// SC_RGYR
@@ -134,6 +140,7 @@ Scorer_Combined::Scorer_Combined()
 	m_rapdf = new RAPDF;
 	m_hbond = new HBond;
 	m_saulo = new Saulo;
+	m_eleanor = new Eleanor;
 	m_core = new CORE;
 	m_predss = new PredSS;
 	m_rgyr = new Rgyr;
@@ -159,6 +166,7 @@ Scorer_Combined::~Scorer_Combined()
 	delete m_rapdf;
 	delete m_hbond;
 	delete m_saulo;
+	delete m_eleanor;
 	delete m_core;
 	delete m_predss;
 	delete m_rgyr;
@@ -204,6 +212,9 @@ bool Scorer_Combined::parse_parameter(const std::string &name,
 				case SC_SAULO:
 					m_saulo->set_long_data_file(value);
 					break;
+				case SC_ELEANOR:
+					m_eleanor->set_long_data_file(value);
+					break;
 				case SC_PREDSS:
 					m_predss->set_long_data_file(value);
 					break;
@@ -241,6 +252,9 @@ bool Scorer_Combined::parse_parameter(const std::string &name,
                                         break;
 				case SC_SAULO:
 					m_saulo->set_short_data_file(value);
+					break;
+				case SC_ELEANOR:
+					m_eleanor->set_short_data_file(value);
 					break;
 				case SC_PREDSS:
 					m_predss->set_short_data_file(value);
@@ -347,6 +361,7 @@ double Scorer_Combined::score(const Peptide &p, double progress /*= 1.0*/,
 				case SC_RAPDF:	if (info_on) s = m_rapdf->score(p, vbose); break; 
 				case SC_HBOND:	s = m_hbond->score(p, vbose); break;
 				case SC_SAULO:	s = m_saulo->score(p, vbose); break;
+				case SC_ELEANOR:s = m_eleanor->score(p, vbose); break;
 				case SC_CORE:	s = m_core->score(p,weight_lj,weight_rapdf,vbose); break;
 				case SC_PREDSS: s = m_predss->score(p, vbose); break;
 				case SC_RGYR:	s = m_rgyr->score(p, vbose); break;

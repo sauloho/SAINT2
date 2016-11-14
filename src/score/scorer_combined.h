@@ -20,6 +20,7 @@ class Lennard_Jones;
 class RAPDF;
 class HBond;
 class Saulo;
+class Eleanor;
 class CORE;
 class PredSS;
 class Rgyr;
@@ -32,7 +33,7 @@ class Ribosome;
 
 enum Score_Term
 {
-	SC_SOLV, SC_ORIENT, SC_LJ, SC_RAPDF, SC_HBOND, SC_SAULO, SC_CORE, SC_PREDSS, SC_RGYR, SC_CONTACT, SC_CROWD, SC_RANDSCR, SC_TOR, SC_PREDTOR,
+	SC_SOLV, SC_ORIENT, SC_LJ, SC_RAPDF, SC_HBOND, SC_SAULO, SC_ELEANOR, SC_CORE, SC_PREDSS, SC_RGYR, SC_CONTACT, SC_CROWD, SC_RANDSCR, SC_TOR, SC_PREDTOR,
 	SC_RIBO, SC_NUM
 };
 
@@ -109,6 +110,7 @@ private:
 	PredTor *m_predtor;
 	HBond *m_hbond;
 	Saulo *m_saulo;
+	Eleanor *m_eleanor;
 	CORE *m_core;
 	PredSS *m_predss;
 	Rgyr *m_rgyr;
