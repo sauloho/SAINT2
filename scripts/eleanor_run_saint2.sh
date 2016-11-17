@@ -31,7 +31,7 @@ then
 		for i in `ls -v $OUTPATH/${FILE}_${FRAC}*`; do
 			echo "MODEL       " $COUNT >> $OUTPATH/${FILE}_${FRAC}
 			grep "^ATOM" $i >> $OUTPATH/${FILE}_${FRAC}
-			rm $i
+			#rm $i
 			echo ENDMDL >> $OUTPATH/${FILE}_${FRAC}
 			((COUNT++))
 		done

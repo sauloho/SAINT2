@@ -262,13 +262,13 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 
                                 /* EDIT: Saulo on March, 18th */
                                 /* Print decoys once 25,50,75,100... residues have been extruded */
-//                                if(m_peptide.length() % 25 == 0)
-  //                              {
-    //                                    char pdb_out[150];
-      //                                  sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
-        //                                m_peptide.write_pdb(pdb_out);
-          //                      }
-            //                    /* Print decoys once ~10%,20%,30%,... of the residues have been extruded */
+                                if(m_peptide.length() % 1 == 0)
+                                {
+                                        char pdb_out[150];
+                                        sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
+                                        m_peptide.write_pdb(pdb_out);
+                                }
+                                /* Print decoys once ~10%,20%,30%,... of the residues have been extruded */
               //                  if(m_peptide.length() % (m_peptide.full_length()/10) == 0)
                 //                {
                   //                      char pdb_out[150];
@@ -324,6 +324,11 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 
 			m_mover->do_random_move(m_peptide, num_candidates,
 				exhaustive_for_pos, candidate, &observer);
+
+			// added to get printout after every proposed move
+			char pdb_out[150];
+			sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
+			m_peptide.write_pdb(pdb_out);
 
 			double progress = m_curr_length_moves /
 				(double) (m_peptide.full_grown() ? m_move_limit :

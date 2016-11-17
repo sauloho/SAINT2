@@ -133,7 +133,7 @@ void Extender_Fixed::calculate_num_moves(const Sequence &seq)
 
 	// print out to check move distibution
 	std::cout << "Linear move distribution:\n";
-	for (int i = 0;i < full + 1;i++)
+	for (int i = 0;i < full;i++)
 	{
 		std::cout << i << ": " << m_moves[i] << "\n";
 	}
