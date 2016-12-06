@@ -47,6 +47,10 @@ public:
 	virtual void init_sequential(Peptide &s, int initial_length,
 		Run_Observer *observer) = 0;
 
+	// set a peptide to its initial state if building from segment
+	virtual void init_sequential_from_segment(Peptide &s, int initial_length,
+		Run_Observer *observer) = 0;
+
 	// set a peptide to its initial state (eg. fully extended)
 	virtual void init_non_sequential(Peptide &s, bool random_coil,
 		Run_Observer *observer) = 0;

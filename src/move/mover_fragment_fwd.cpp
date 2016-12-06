@@ -145,6 +145,38 @@ void Mover_Fragment_Fwd::init_sequential(Peptide &p, int initial_length,
 	}
 }
 
+void Mover_Fragment_Fwd::init_sequential_from_segment(Peptide &p, int initial_length,
+	Run_Observer *observer)
+{
+	// don't limit fragment library use unless we have a long start segment
+	// m_first_end_pos is -1 by default
+	if (initial_length > 9)
+	{
+		// we want the last fragment that we are using to have its end at the end
+		// of the segment. Minus 1 allows segment to be used also.
+		*p_m_first_end_pos = initial_length - 1;
+	}
+
+	std::cout << "In init_sequential -- m_first_end_pos: " << *p_m_first_end_pos << "\n";
+	
+	assert(initial_length > 0);
+	assert(initial_length <= p.full_length());
+	assert(initial_length == p.length());
+	load_fragments(observer);
+
+	/*Fragment *f = get_starting_fragment(initial_length);
+	p.set_length(f->length());
+	//change_angles(p, 0, f);
+	change_angles(p, initial_length - 1, f);
+
+	if (p.length() < initial_length)
+	{
+		extend(p, initial_length - p.length(),
+			true,	// ribosome wall -- no harm done if it isn't actually true
+			observer);
+	}*/
+}
+
 void Mover_Fragment_Fwd::do_random_move(Peptide &p, int num,
 	bool exhaustive_for_pos, Conf_Vec &result, Run_Observer *observer)
 {
@@ -296,15 +328,15 @@ void Mover_Fragment_Fwd::change_angles(Peptide &p, int p_end_index,
 		old_C = p.atom_pos(p_end_index, Atom_C);
 		old_n_angle = angle_formed(old_CA, old_N, old_C);
 
-/*
-double curr_phi = torsion_angle(
-	p.atom_pos(p_end_index, Atom_C),
-	p.atom_pos(p_end_index + 1, Atom_N),
-	p.atom_pos(p_end_index + 1, Atom_CA),
-	p.atom_pos(p_end_index + 1, Atom_C));
-std::cout << "ORIG phi: " << curr_phi << "  " << p.conf().phi(p_end_index + 1) << "\n";
-assert(true && approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
-*/
+
+//double curr_phi = torsion_angle(
+//	p.atom_pos(p_end_index, Atom_C),
+//	p.atom_pos(p_end_index + 1, Atom_N),
+//	p.atom_pos(p_end_index + 1, Atom_CA),
+//	p.atom_pos(p_end_index + 1, Atom_C));
+//std::cout << "ORIG phi: " << curr_phi << "  " << p.conf().phi(p_end_index + 1) << "\n";
+//assert(true && approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
+
 
 	}
 
@@ -439,15 +471,15 @@ assert(true && approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
 		i = p_end_index + 1;
 		p.transform_pos(i, Atom_C, t);
 
-/*
-double curr_phi = torsion_angle(
-	p.atom_pos(p_end_index, Atom_C),
-	p.atom_pos(p_end_index + 1, Atom_N),
-	p.atom_pos(p_end_index + 1, Atom_CA),
-	p.atom_pos(p_end_index + 1, Atom_C));
-std::cout << "phi: " << curr_phi << "  " << p.conf().phi(p_end_index + 1) << "\n";
-assert(approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
-*/
+
+//double curr_phi = torsion_angle(
+//	p.atom_pos(p_end_index, Atom_C),
+//	p.atom_pos(p_end_index + 1, Atom_N),
+//	p.atom_pos(p_end_index + 1, Atom_CA),
+//	p.atom_pos(p_end_index + 1, Atom_C));
+//std::cout << "phi: " << curr_phi << "  " << p.conf().phi(p_end_index + 1) << "\n";
+//assert(approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
+
 
 		// Atom_N and Atom_CA have already been changed
 
@@ -483,15 +515,16 @@ assert(approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
 				next_n_pos));
 	}
 	
-/*
-	std::cout << "Verify after change angles: start = "
-		<< p.start() << " end = " << p.end()
-		<< " frag = " << p_end_index - f->length() + 1 
-		<< " to " << p_end_index << std::endl;
-	//p.conf().verify_torsion_angles();
-	//p.verify();
-*/
+
+//	std::cout << "Verify after change angles: start = "
+//		<< p.start() << " end = " << p.end()
+//		<< " frag = " << p_end_index - f->length() + 1 
+//		<< " to " << p_end_index << std::endl;
+//	p.conf().verify_torsion_angles();
+//	p.verify();
+
 }
+
 /*
 void Mover_Fragment_Fwd::change_angles(Peptide &p, int p_start_index,
 	const Fragment *f)

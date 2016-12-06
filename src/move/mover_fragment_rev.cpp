@@ -145,6 +145,37 @@ void Mover_Fragment_Rev::init_sequential(Peptide &p, int initial_length,
 	}
 }
 
+void Mover_Fragment_Rev::init_sequential_from_segment(Peptide &p, int initial_length,
+	Run_Observer *observer)
+{
+	assert(initial_length > 0);
+	assert(initial_length <= p.full_length());
+	load_fragments(observer);
+
+	// m_c_terminus should have been set by load_fragments()
+	assert(m_c_terminus != -1);
+
+	if (m_c_terminus != p.full_length() - 1)
+	{
+		std::cerr
+			<< "Error: fragment library implies C terminus is at position "
+			<< m_c_terminus + 1 << ", but sequence length is "
+			<< p.full_length() << "\n";
+		exit(1);
+	}
+
+	Fragment *f = get_starting_fragment(initial_length);
+	p.set_length(f->length());
+	change_angles(p, p.end(), f);
+
+	if (p.length() < initial_length)
+	{
+		extend(p, initial_length - p.length(),
+			true,	// ribosome wall -- no harm done if it isn't actually true
+			observer);
+	}
+}
+
 // DONE
 void Mover_Fragment_Rev::do_random_move(Peptide &p, int num,
 	bool /*exhaustive_for_pos*/, Conf_Vec &result, Run_Observer *observer)

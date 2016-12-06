@@ -32,6 +32,9 @@ public:
 	virtual void init_sequential(Peptide &s, int initial_length,
 		Run_Observer *observer);
 
+	virtual void init_sequential_from_segment(Peptide &s, int initial_length,
+		Run_Observer *observer);
+
 	// create a set of structures from a peptide; each one is a random
 	// move away from the original structure
 	virtual void do_random_move(Peptide &p, int num,

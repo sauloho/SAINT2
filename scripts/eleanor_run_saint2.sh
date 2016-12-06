@@ -4,20 +4,20 @@
 OUTPUT=$1
 METHODS=$2
 export DATA_PATH=`realpath $3`
-#SNAPSHOTS=$4
+SEGMENT_LENGTH=$4
+#SNAPSHOTS=$5
 HOST=`hostname`
 mkdir -p $HOST/$OUTPUT
-
 if [[ $METHODS =~ c ]]
 then
 	#COTRANS
 
 	# set up directory for output
-	OUTPATH=${OUTPUT}_c_n_${OUTPUT}.flib_10000_1000_t2.5_linear/$HOST
+	OUTPATH=${OUTPUT}_c_n_${OUTPUT}.flib_10000_1000_t2.5_Seg${SEGMENT_LENGTH}_linear/$HOST
 	mkdir -p $OUTPATH
 
 	### run saint2 and store the filename of the decoy generated on the variable "$FILE" ###
-	FILE=`$SAINT2/scripts/eleanor_run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib 10000 1000 2.5 linear`
+	FILE=`$SAINT2/scripts/eleanor_run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib 10000 1000 2.5 segment $SEGMENT_LENGTH linear`
 
 	# get the last part of the filename after the last underscore (process ID)
 	PID=${FILE##*_}
@@ -31,7 +31,7 @@ then
 		for i in `ls -v $OUTPATH/${FILE}_${FRAC}*`; do
 			echo "MODEL       " $COUNT >> $OUTPATH/${FILE}_${FRAC}
 			grep "^ATOM" $i >> $OUTPATH/${FILE}_${FRAC}
-			#rm $i
+			rm $i
 			echo ENDMDL >> $OUTPATH/${FILE}_${FRAC}
 			((COUNT++))
 		done
@@ -39,7 +39,7 @@ then
 
 	# score the decoy using the scoring or running config file
 	#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
-	$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_c_n*linear -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
+	$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
 	if [ "$?" = "0" ]; then
 		SOLV=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Solvation =/ { print $NF; }'`
 		ORIE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Orientation =/ { print $NF; }'`

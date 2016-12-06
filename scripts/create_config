@@ -10,7 +10,7 @@ then
     echo "Usage:
 
         Cotrans:
-        $cmd pdb_id c r|n fasta_file library growth_moves additional_moves temperature [fixed|linear|(codon_file tunnel_length)] [rev]
+        $cmd pdb_id c r|n fasta_file library growth_moves additional_moves temperature [segment segment_length] [fixed|linear|(codon_file tunnel_length)] [rev]
 
         In vitro:
         $cmd pdb_id i fasta_file library moves temperature
@@ -31,6 +31,8 @@ then
         additional_moves Number of moves after peptide is full grown
         moves            Number of in vitro moves
         temperature      Monte Carlo + Metropolis Criterion temperature (eg. 2.5)
+        segment          Start from a segment of the native pdb (code.pdb)
+        segment_length   Length of segment to start from
         'fixed'          Fixed number of moves during cotrans growth (default)
         'linear'         Linearly increasing number of moves during cotrans growth
         codon_file       TAI value for each codon
@@ -107,6 +109,17 @@ c) cotrans="true"
 
    shift; shift; shift; shift; shift; shift; shift; shift;
 
+   if [ \( $# -ge 1 \) -a \( "$1" = "segment" \) ]
+   then
+       segment="$2"
+       if echo "$segment" | grep -q -v '^[0-9][0-9]*$'
+       then
+	       echo "$0: Illegal segment length: $segment" 1>&2
+	       exit 1
+       fi
+       shift; shift
+   fi
+
    if [ \( $# -ge 1 \) -a \( \( "$1" = "fixed" \) -o \( "$1" = "linear" \) \) ]
    then
        distrib="$1"
@@ -151,6 +164,11 @@ c) cotrans="true"
    fi
 
    name="config_${id}_c_${rib}_${libname}_${gmoves}_${moves}_t${temp}"
+
+   if [ ! -z "$segment" ]
+   then
+      name="${name}_Seg${segment}"
+   fi
 
    if [ ! -z "$codon" ]
    then
@@ -267,6 +285,11 @@ echo "[General]" >> $name
 echo >> $name
 echo "sequential = $cotrans" >> $name
 echo "moves = $moves" >> $name
+datadir2=$DATA_PATH
+if [ ! -z "$segment" ]
+then
+	echo "start_structure = $datadir2/$id.pdb" >> $name
+fi
 
 if [ ! -z "$rev" ]
 then
@@ -292,7 +315,12 @@ then
 	fi
 
 	echo >> $name
-	echo "initial = 9" >> $name
+	if [ ! -z "$segment" ]
+	then
+		echo "initial = $segment" >> $name
+	else
+		echo "initial = 9" >> $name
+	fi
 	echo "extrude = 1" >> $name
 	echo "growth_moves = $gmoves" >> $name
 	echo >> $name
@@ -308,14 +336,13 @@ echo "# \"long\" = longer than 150 residues" >> $name
 echo "# \"short\" = less than or equal to 150 residues" >> $name
 echo >> $name
 
-datadir2=$DATA_PATH
 
 echo "long_rapdf_file = $datadir/long_rapdf.data" >> $name
 echo "long_solvation_file = $datadir/long_solv.data" >> $name
 echo "long_torsion_file = $datadir/long_torsion.data" >> $name
 echo "long_orientation_file = $datadir/long_orient.data" >> $name
 echo "long_saulo_file = $datadir2/$id.con" >> $name
-echo "long_eleanor_file = $datadir2/$id.con" >> $name
+echo "long_eleanor_file = $datadir2/$id.span" >> $name
 echo "long_predss_file = $datadir2/$id.fasta.ss" >> $name
 echo "long_contact_file = $datadir2/foo.cmap" >> $name
 echo "long_predtor_file = $datadir2/$id.spXout" >> $name
@@ -326,7 +353,7 @@ echo "short_solvation_file = $datadir/short_solv.data" >> $name
 echo "short_torsion_file = $datadir/short_torsion.data" >> $name
 echo "short_orientation_file = $datadir/short_orient.data" >> $name
 echo "short_saulo_file = $datadir2/$id.con" >> $name
-echo "short_eleanor_file = $datadir2/$id.con" >> $name
+echo "short_eleanor_file = $datadir2/$id.span" >> $name
 echo "short_predss_file = $datadir2/$id.fasta.ss" >> $name
 echo "short_contact_file = $datadir2/foo.cmap" >> $name
 echo "short_predtor_file = $datadir2/$id.spXout" >> $name
@@ -337,7 +364,7 @@ echo "long_weight_solvation   = 0.282" >> $name
 echo "long_weight_lj          = 0.304" >> $name
 echo "long_weight_hbond       = 0" >> $name
 echo "long_weight_saulo       = 1" >> $name
-echo "long_weight_eleanor     = 0" >> $name
+echo "long_weight_eleanor     = 1" >> $name
 echo "long_weight_core        = 1" >> $name
 echo "long_weight_predss      = 0" >> $name
 echo "long_weight_rgyr        = 0" >> $name
@@ -354,7 +381,7 @@ echo "short_weight_solvation   = 0.262" >> $name
 echo "short_weight_lj          = 0.505" >> $name
 echo "short_weight_hbond       = 0" >> $name
 echo "short_weight_saulo       = 1" >> $name
-echo "short_weight_eleanor     = 0" >> $name
+echo "short_weight_eleanor     = 1" >> $name
 echo "short_weight_core        = 1" >> $name
 echo "short_weight_predss      = 0" >> $name
 echo "short_weight_rgyr        = 0" >> $name

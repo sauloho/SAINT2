@@ -151,8 +151,8 @@ void Runner::parse_params(const Param_List &params)
 	if (!m_start_struct.empty() && m_sequential)
 	{
 		std::cerr <<
-			"Warning: ignoring start structure for sequential folding\n";
-		m_start_struct = "";
+			"Warning: using start structure for sequential folding - may not work!\n";
+		//m_start_struct = "";
 	}
 
 	// no other parameter verification needed
@@ -197,14 +197,50 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 	{
 		std::cout << "Run #" << m_run << "\n";
 		m_peptide.create_from_sequence(seq);
+		std::cout << "created peptide from sequence\n";
+		std::cout << "peptide full_length: " << m_peptide.full_length() << "\n";
 // if (m_run % 2 == 1)
 // { std::cout << "Switching to in vitro\n"; m_sequential = false; }
 // else { std::cout << "Switching to cotrans\n"; m_sequential = true; }
 
 		if (m_sequential)
 		{
-			m_mover->init_sequential(m_peptide,
-			m_extender->initial_residues(), &observer);
+			if (!m_start_struct.empty())
+			{
+				if (!m_peptide.read_segment_from_pdb(m_start_struct.c_str(), m_extender->initial_residues()))
+				{
+					std::cerr << "Error while reading start structure "
+						<< m_start_struct << "\n";
+					exit(1);
+				}
+
+				std::cout << "read start structure\n";
+				std::cout << "peptide full_length: " << m_peptide.full_length() << "\n";
+				std::cout << "peptide length: " << m_peptide.length() << "\n";
+				m_peptide.remove_non_backbone_atoms();
+				std::cout << "removed non-backbone atoms\n";
+				m_peptide.conf().calc_torsion_angles();
+				std::cout << "calculated torsion angles\n";
+				m_peptide.idealise_bond_lengths();
+
+				char pdb_out[150];
+				sprintf(pdb_out,"%s_part%dtest1",m_outfile.c_str(),m_peptide.length());
+				m_peptide.write_pdb(pdb_out);
+
+				std::cout << "starting init sequential from pdb segment\n";
+				m_mover->init_sequential_from_segment(m_peptide,
+						m_extender->initial_residues(), &observer);
+
+				sprintf(pdb_out,"%s_part%dtest2",m_outfile.c_str(),m_peptide.length());
+				m_peptide.write_pdb(pdb_out);
+
+			}
+			else
+			{
+				std::cout << "starting init sequential from fragment\n";
+				m_mover->init_sequential(m_peptide,
+						m_extender->initial_residues(), &observer);
+			}
 		}
 		else
 		{
@@ -325,10 +361,10 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 			m_mover->do_random_move(m_peptide, num_candidates,
 				exhaustive_for_pos, candidate, &observer);
 
-			// added to get printout after every proposed move
-			char pdb_out[150];
-			sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
-			m_peptide.write_pdb(pdb_out);
+			//// added to get printout after every proposed move
+			//char pdb_out[150];
+			//sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
+			//m_peptide.write_pdb(pdb_out);
 
 			double progress = m_curr_length_moves /
 				(double) (m_peptide.full_grown() ? m_move_limit :

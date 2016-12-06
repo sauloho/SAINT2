@@ -134,6 +134,7 @@ void Peptide::create_from_sequence(const Sequence &seq)
 	for (n = 0;n < m_full_length;n++)
 	{
 		m_res[n].set_amino(seq.amino(n));
+		std::cout << "seq.amino(n): " << seq.amino(n).name() << "\n";
 		m_res[n].allocate_backbone_atoms();
 	}
 
@@ -489,6 +490,370 @@ bool Peptide::read_pdb(const char *filename, char chain /*=' '*/,
 	return true;
 }
 
+bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
+	char chain /*=' '*/, bool no_warnings /*=false*/)
+{
+	// reset all data in the Peptide
+	//clear();
+	
+	// data read in when sequence was read
+	std::cout << "m_full_length: " << m_full_length << "\n";
+	std::cout << "m_length: " << m_length << "\n";
+
+	m_from_pdb = true;
+
+	bool use_first_chain = (chain == ' ');
+	bool found_chain = false;
+	bool removed_first_res = false;
+
+	// (exits with a message if the file cannot be opened)
+	const char *desc = "PDB file";
+	C_File file(filename, "r", desc);
+
+	m_filename = filename;
+
+	// residue currently being read
+	Residue *res = NULL;
+
+	// index of current residue
+	int res_index = -1;
+
+	// sequence number and i-code of the current residue
+	int curr_res_seq = -99999;
+	char curr_i_code = ' ';
+
+	const int Max_Len = 10000;
+	char buffer[Max_Len];
+	int line_num = 0;
+
+	while (fgets(buffer, Max_Len, file))
+	{
+		line_num++;
+		std::string record(buffer, 6);
+
+		if (record == "ENDMDL")
+		{
+			// found end of model
+			break;
+		}
+
+		// check for terminal residue
+
+		if (record == "TER   " && found_chain)
+		{
+			// treat the line the same way as an "ATOM" record;
+			// some things will be missing (eg. xyz positions),
+			// but it can still parse the line partially
+			// (to get the chain, res_seq and i_code)
+
+			PDB_Atom_Rec rec;
+			std::string err_msg;
+
+			rec.parse(buffer, &err_msg);
+
+			if (rec.chain_id == chain &&
+				rec.res_seq == curr_res_seq &&
+				rec.i_code == curr_i_code)
+			{
+				// found terminal residue
+				break;
+			}
+		}
+
+		if (record == "ATOM  ")
+		{
+			PDB_Atom_Rec rec;
+			std::string err_msg;
+			
+			if (!rec.parse(buffer, &err_msg))
+			{
+				if (!no_warnings)
+				{
+					std::cerr << "Warning: "
+						<< err_msg
+						<< " on line " << line_num
+						<< " of " << filename
+						<< "\n";
+				}
+
+				continue;
+			}
+
+			// ignore terminal oxygen
+			if (rec.name == " OXT")
+			{
+				continue;
+			}
+
+			// if chain was not specified, set it to the first one found
+
+			if (chain == ' ')
+			{
+				chain = rec.chain_id;
+			}
+
+			if (rec.chain_id == chain)
+			{
+				found_chain = true;
+
+				// extract the amino acid type
+				Amino aa(rec.res_name.c_str());
+
+				if (!aa.standard())
+				{
+					if (!no_warnings)
+					{
+						std::cerr
+							<< "Warning: ignoring unknown amino acid type "
+							<< rec.res_name
+							<< " on line "
+							<< line_num
+							<< " of "
+							<< filename
+							<< "\n";
+					}
+
+					continue;
+				}
+
+				// check if a new residue has been started
+
+				if (!(rec.res_seq == curr_res_seq &&
+					  rec.i_code == curr_i_code))
+				{
+// std::cout << "NEW RES " << rec.res_seq << "\n";
+					// check for missing residues (gaps in sequence numbering)
+					//
+					// (Note that two residues in a row can have the same
+					// sequence number but different i-codes)
+
+					bool id_gap = (curr_res_seq != -99999 &&
+						rec.res_seq != curr_res_seq &&
+						rec.res_seq != curr_res_seq + 1 &&
+						res != NULL);
+
+					bool remove_init_res = false;
+					bool at_init_res =
+						(m_res.size() == 1 && !removed_first_res);
+					const char *remove_msg;
+
+					if (id_gap)
+					{
+						if (at_init_res)
+						{
+							remove_init_res = true;
+							remove_msg = " with immediate gap";
+						}
+						else
+						{
+							res->set_missing_after(true);
+						}
+					}
+					else
+					if (at_init_res &&
+						!(res->atom_exists(Atom_N) &&
+			  			  res->atom_exists(Atom_CA) &&
+			  			  res->atom_exists(Atom_C)))
+					{
+						remove_init_res = true;
+						remove_msg = " with missing atoms";
+					}
+
+					if (remove_init_res)
+					{
+						if (!no_warnings)
+						{
+							std::cout
+								<< "Warning: ignoring initial residue "
+								<< m_res[0].res_seq_str()
+								<< remove_msg
+								<< " on line "
+								<< m_res[0].pdb_line()
+								<< " of "
+								<< filename
+								<< "\n";
+						}
+
+						m_res.erase(m_res.begin());
+						removed_first_res = true;
+						std::cout << "this is very bad news\n";
+					}
+
+					if (m_length == segment_length)
+					{
+						break;
+					}
+
+					m_length++;
+					//res_index = (int) m_res.size();
+					res_index = m_length - 1;
+					std::cout << "res_index: " << res_index << "\n";
+					//m_res.resize(res_index + 1);
+					//m_conf.set_num_res(res_index + 1);
+
+					curr_res_seq = rec.res_seq;
+					curr_i_code = rec.i_code;
+
+					res = &m_res[res_index];
+					//res->clear();
+
+					// check that the amino acid in the
+					// seq and struc are the same
+					assert(res->amino().name() == aa.name());
+					std::cout << "~~~~added a new amino acid~~~~\n";
+					std::cout << "aa: " << aa.name() << "\n";
+					std::cout << "res.amino(): " << res->amino().name() << "\n";
+					std::cout << "m_full_length: " << m_full_length << "\n";
+					std::cout << "m_length: " << m_length << "\n";
+					//res->set_amino(aa);
+					res->set_res_seq(curr_res_seq, curr_i_code);
+					res->set_pdb_line(line_num);
+				}
+				else   // same residue as last ATOM record
+				{
+					if (aa != res->amino())
+					{
+						/***
+						if (!no_warnings)
+						{
+							std::cerr
+								<< "Warning: ignoring multiple occupancy atom "
+									"on line "
+								<< line_num
+								<< " of " << filename
+								<< "\n";
+						}
+						***/
+
+						continue;
+					}
+				}
+
+				// add the new atom to the residue
+				Atom_Type t(rec.name.c_str());
+			
+				if (t.undefined())
+				{
+					if (!no_warnings)
+					{
+						// probably hydrogen if contains an "H";
+						// don't bother reporting
+						// ("OXT" is terminal oxygen)
+
+						if (strchr(rec.name.c_str(), 'H') == NULL &&
+							rec.name != " OXT")
+						{
+							std::cerr << "Warning: ignoring unknown atom type "
+								<< rec.name
+								<< " on line " << line_num
+								<< " of " << filename
+								<< "\n";
+						}
+					}
+
+					continue;
+				}
+
+				if (aa.rapdf_id(t) == -1)
+				{
+					if (!no_warnings)
+					{
+						std::cerr << "Warning: ignoring "
+							<< rec.name
+							<< " found in "
+							<< aa.name()
+							<< " on line " << line_num
+							<< " of " << filename
+							<< "\n";
+					}
+				}
+				else
+				if (res->atom_exists(t))
+				{
+// std::cout << "ADD ATOM " << rec.name << " TO RES " << rec.res_seq << "\n";
+					Atom *a = res->get_or_add_atom(t);
+					std::cout << "HI\n";
+					a->set_pdb_line(line_num);
+					set_atom_pos(res_index, t.type(), rec.pos);
+				}
+			}
+		}
+	}
+
+	if (m_res.size() == 0)
+	{
+		if (use_first_chain)
+		{
+			std::cerr << "Error: no valid residues found in first chain in "
+				<< filename << "\n";
+		}
+		else
+		{
+			std::cerr << "Error: chain '" << chain
+				<< "' not found in " << filename
+				<< "\n";
+		}
+
+		return false;
+	}
+
+	if (m_res.size() > 1)
+	{
+		assert(res != NULL);
+
+		bool remove_final = false;
+		const char *desc;
+
+		if (m_res[m_res.size()-2].missing_after())
+		{
+			remove_final = true;
+			desc = " after id gap";
+		}
+		else
+		if (!(res->atom_exists(Atom_N) &&
+			  res->atom_exists(Atom_CA) &&
+			  res->atom_exists(Atom_C)))
+		{
+			remove_final = true;
+			desc = " with missing atoms";
+		}
+
+		if (remove_final)
+		{
+			if (!no_warnings)
+			{
+				std::cout
+					<< "Warning: ignoring final residue "
+					<< res->res_seq_str()
+					<< desc
+					<< " on line "
+					<< res->pdb_line()
+					<< " of "
+					<< filename
+					<< "\n";
+			}
+
+			m_res.pop_back();
+		}
+	}
+
+	if (m_res.size() > 1)
+	{
+		m_res[m_res.size()-1].set_missing_after(false);
+	}
+
+	m_chain = chain;
+	//m_length = (int) m_res.size();
+
+	//check_N_CA_C_positions(filename, no_warnings);
+	//check_CB_positions(filename, no_warnings);
+	//check_O_positions(filename, no_warnings);
+	// check_side_chain_atoms(filename, no_warnings);
+	if (!no_warnings) { print_missing_res(filename); }
+
+	return true;
+}
+
 const char *Peptide::get_filename() const
 {
 	return m_filename.c_str();
@@ -587,6 +952,7 @@ void Peptide::check_N_CA_C_positions(const char *filename, bool no_warnings)
 
 			if (atom_exists)
 			{
+				std::cout << "atom_pos " << n << ": " << atom_pos(n, t) << "\n";
 				pos[a] = atom_pos(n, t);
 			}
 			else
@@ -1166,7 +1532,8 @@ void Peptide::write_pdb(const char *filename,
 			int res_seq;
 			char i_code;
 
-			if (m_from_pdb)
+			//if (m_from_pdb)
+			if (false)
 			{
 				res_seq = r.res_seq();
 				i_code = r.i_code();
@@ -1875,6 +2242,7 @@ bool Peptide::verify_scwrl_exec(
 
 const Residue &Peptide::res(int n) const
 {
+	//std::cout << "n: " << n << "  full_length: " << m_full_length << "\n";
 	assert(n >= 0 && n < m_full_length);
 	return m_res[(int)n];
 }
@@ -1990,7 +2358,11 @@ void Peptide::idealise()
 
 void Peptide::idealise_bond_lengths()
 {
-	assert(m_length == m_full_length);
+	std::cout << "HI ELEANOR idealise_bond_lengths\n";
+	//assert(m_length == m_full_length);
+	std::cout << "m_length: " << m_length << "  m_full_length: " << m_full_length << "\n";
+	std::cout << "HI ELEANOR idealise_bond_lengths\n";
+
 
 	if (num_missing_res() != 0 ||
 		num_missing_backbone() != 0)

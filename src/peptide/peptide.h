@@ -56,6 +56,11 @@ public:
 	bool read_pdb(const char *filename, char chain = ' ',
 		bool no_warnings = false);
 
+	// read part of a chain from a PDB file (if the chain is ' ', the first
+	// chain found is used).
+	bool read_segment_from_pdb(const char *filename, int segment_length,
+		char chain = ' ', bool no_warnings = false);
+
 	// get the filename used in the last call to read_pdb() or write_pdb()
 	const char *get_filename() const;
 

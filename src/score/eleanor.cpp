@@ -47,7 +47,7 @@ void Eleanor::load_data(const Peptide& p)
 {
 	FILE *input_file; 
 	int i,j,span,tot_resis;
-	double scr;
+	int doubled_midpoints[5000];
 
 	if (m_data_loaded)
 	{
@@ -89,30 +89,63 @@ void Eleanor::load_data(const Peptide& p)
 
 	for (span=0;fscanf(input_file,"\t%d\t%d\n",&i,&j) != EOF ; span++)
 	{
-		m_con[0][span]=i;
-		m_con[1][span]=j;
+		m_con[0][span] = i;
+		m_con[1][span] = j;
+		doubled_midpoints[span] = i + j;
 	}
 	
 	m_num_spans=span;
 	num_con=span;
 	std::cout << "number of spans: " << span << "\n";
 	
+	// initialise array values to zeros
 	for (i=0; i<p.full_length(); i++)
 	{
 		m_layer[i] = 0;
-		for (span=0;span<m_num_spans;span++)
-		{
-			if (i>=m_con[0][span] && i<=m_con[1][span])
-			{
-				m_layer[i] = 1;
-			}
-		}
-		std::cout << m_layer[i];
 	}
-	std::cout << "\n";
+
+	// go through and allocate 1 or 2 to central residues in each helix
+	//  midpoint-¬
+	//           v 
+	// odd:  1,2,2,2,1
+	// even:  2,2,2,2
+	for (i=0; i<span; i++)
+	{
+		if (doubled_midpoints[i] % 2 == 1)
+		{
+			m_layer[(doubled_midpoints[i]-1)/2 - 1] = 2;
+			std::cout << "Efirst " << (doubled_midpoints[i]-1)/2 - 1 << "\n";
+			m_layer[(doubled_midpoints[i]-1)/2 + 0] = 2;
+			m_layer[(doubled_midpoints[i]-1)/2 + 1] = 2;
+			m_layer[(doubled_midpoints[i]-1)/2 + 2] = 2;
+			std::cout << "Elast  " << (doubled_midpoints[i]-1)/2 + 2 << "\n";
+		}
+		else
+		{
+			m_layer[doubled_midpoints[i]/2 - 2] = 1;
+			std::cout << "Ofirst " << doubled_midpoints[i]/2 - 2 << "\n";
+			m_layer[doubled_midpoints[i]/2 - 1] = 2;
+			m_layer[doubled_midpoints[i]/2 + 0] = 2;
+			m_layer[doubled_midpoints[i]/2 + 1] = 2;
+			m_layer[doubled_midpoints[i]/2 + 2] = 1;
+			std::cout << "Olast  " << doubled_midpoints[i]/2 + 2 << "\n";
+		}
+	}
+	//for (i=0; i<p.full_length(); i++)
+	//{
+	//	m_layer[i] = 0;
+	//	for (span=0;span<m_num_spans;span++)
+	//	{
+	//		if (i>=m_con[0][span] && i<=m_con[1][span])
+	//		{
+	//			m_layer[i] = 1;
+	//		}
+	//	}
+	//	std::cout << m_layer[i];
+	//}
+	//std::cout << "\n";
 
 
-    m_satisfied_con = (int *)malloc(sizeof(int)*(num_con+1));
     m_previous_len = 0;
     // p.alloc_satisfied_con (num_con);
 	m_data_loaded = true;
@@ -124,97 +157,32 @@ double Eleanor::score(const Peptide& p, bool verbose)
 	load_data(p);
 
 	int len = p.length();
-	int i,j,k,cont=0;
-    int possible_con=0;
+	int k = 0;
 
 	double total=0.0;
 	Point cb_i, cb_j;
 
-    if(len != m_previous_len)
-    {
-        if((p.length()-1) % (p.full_length()/10) == 0)
-        {
-		    std::ofstream myfile;
-	        char myString[150];
-		    std::strcpy(myString,"scmatrix_perc");
-		    std::strcat(myString,p.get_filename());
-			myfile.open(myString,std::ios_base::app);
-          	  myfile<<len<<" ";
-           	 for(k=0;k<num_con+1;k++)
-               		 myfile<<  m_satisfied_con[k]<<" ";
-           	 myfile<<"\n";
-           	 m_previous_len=len;
-			myfile.close();
-        }
-
-        if((p.length()-1) % 25 == 0 )
-        {
-		    std::ofstream myfile;
-		    char myString[150];
-		    std::strcpy(myString,"scmatrix_part");
-		    std::strcat(myString,p.get_filename());
-            if((p.length()-1) % (p.full_length()/10) == 0) /* This means that p.get_filename() retrieved the perc file instead of the part file. */
-            {
-                int c;
-                for(c=std::strlen(myString);myString[c]!='p';c--);
-                myString[c+1]='a';
-                myString[c+3]='t';
-		    }
-            myfile.open(myString,std::ios_base::app);
-            myfile<<len<<" ";
-            for(k=0;k<num_con+1;k++)
-                myfile<< m_satisfied_con[k] << " ";
-            myfile<<"\n";
-		    myfile.close();
-        }
-        m_previous_len=len;
-    }
-
-    for(k=0;k<num_con;k++) m_satisfied_con[k]=-1;
-
-	for (k=0;k<num_con;k++)
+	if(len != m_previous_len)
 	{
-		i = m_con[0][k]; 	j=m_con[1][k];
+		m_previous_len=len;
+	}
 
-		if( i-1 >= p.start() &&  i-1 <= p.end() && j-1 <= p.end() && j-1 >= p.start() )
+	for (k=0; k<len; k++)
+	{
+		if (abs(p.atom_pos(k, Atom_CA).z) > 5) // not within 5A of middle of membrane
 		{
-			possible_con++;
-			if(std::strcmp(p.res(i-1).amino().abbr(),"GLY") == 0)
-			{
-				cb_i = p.atom_pos(i-1, Atom_CA);				
-			}
-			else
-				cb_i = p.atom_pos(i-1, Atom_CB);				
-
-			if(!std::strcmp(p.res(j-1).amino().abbr(),"GLY"))
-			{
-				cb_j = p.atom_pos(j-1, Atom_CA);				
-			}
-			else
-				cb_j = p.atom_pos(j-1, Atom_CB);				
-
-			if ( cb_i.distance(cb_j) > 8.0) /* They are predicted to be contacts, but are far away in the model! */
-			{
-				total += cb_i.distance(cb_j) - 8.0;
-				cont++;
-                //std::cout << "0 ";
-                m_satisfied_con[k]=0;
-			}
-            else
-                //std::cout << "1 ";
-                m_satisfied_con[k]=1;
+			total += (abs(p.atom_pos(k, Atom_CA).z) - 5) * m_layer[k];
+			//std::cout << "k CA z-coord: " << p.atom_pos(k, Atom_CA).z << "m_layer[k]" <<  m_layer[k] <<  "\n";
+			//std::cout << "total: " << total << "\n";
 		}
 	}
+
 	
-    if(possible_con)
-	    m_satisfied_con[num_con]=100*(possible_con - cont)/possible_con;
-    else
-        m_satisfied_con[num_con]=-1;
 #ifndef RAW_SCORE
 
 	// Alter the score so that it has about the same distribution
 	// for all lengths
-	total /= sqrt((double) len);
+	//total /= sqrt((double) len);
 	// normalise so that all score types have approximately the same range
 	total = total * 28.0;
 	
