@@ -161,6 +161,7 @@ double Eleanor::score(const Peptide& p, bool verbose)
 
 	double total=0.0;
 	Point cb_i, cb_j;
+	float tolerance = 10;
 
 	if(len != m_previous_len)
 	{
@@ -169,10 +170,10 @@ double Eleanor::score(const Peptide& p, bool verbose)
 
 	for (k=0; k<len; k++)
 	{
-		if (abs(p.atom_pos(k, Atom_CA).z) > 5) // not within 5A of middle of membrane
+		if (fabs(p.atom_pos(k, Atom_CA).z) > tolerance) // not within 5A of middle of membrane
 		{
-			total += (abs(p.atom_pos(k, Atom_CA).z) - 5) * m_layer[k];
-			//std::cout << "k CA z-coord: " << p.atom_pos(k, Atom_CA).z << "m_layer[k]" <<  m_layer[k] <<  "\n";
+			total += (fabs(p.atom_pos(k, Atom_CA).z) - tolerance) * (double) m_layer[k];
+			//std::cout << k << " CA z-coord: " << p.atom_pos(k, Atom_CA).z << "  m_layer[" << k << "]: " <<  m_layer[k] <<  "\n";
 			//std::cout << "total: " << total << "\n";
 		}
 	}

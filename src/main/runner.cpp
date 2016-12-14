@@ -148,12 +148,12 @@ void Runner::parse_params(const Param_List &params)
 		}
 	}
 
-	if (!m_start_struct.empty() && m_sequential)
-	{
-		std::cerr <<
-			"Warning: using start structure for sequential folding - may not work!\n";
-		//m_start_struct = "";
-	}
+	//if (!m_start_struct.empty() && m_sequential)
+	//{
+	//	std::cerr <<
+	//		"Warning: using start structure for sequential folding - may not work!\n";
+	//	//m_start_struct = "";
+	//}
 
 	// no other parameter verification needed
 }
@@ -298,7 +298,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 
                                 /* EDIT: Saulo on March, 18th */
                                 /* Print decoys once 25,50,75,100... residues have been extruded */
-                                if(m_peptide.length() % 1 == 0)
+                                if(m_peptide.length() % 25 == 0)
                                 {
                                         char pdb_out[150];
                                         sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());

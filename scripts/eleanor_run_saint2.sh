@@ -5,6 +5,10 @@ OUTPUT=$1
 METHODS=$2
 export DATA_PATH=`realpath $3`
 SEGMENT_LENGTH=$4
+LENGTH=`cat $OUTPUT.length | tr -d '\n'`
+INITIAL_LENGTH=9
+GROWTH_MOVES=`bc <<< "10000*($LENGTH-$SEGMENT_LENGTH)^2/($LENGTH-$INITIAL_LENGTH)^2"`
+MOVES=`bc <<< "1000*($LENGTH-$SEGMENT_LENGTH)/$LENGTH"`
 #SNAPSHOTS=$5
 HOST=`hostname`
 mkdir -p $HOST/$OUTPUT
@@ -13,11 +17,11 @@ then
 	#COTRANS
 
 	# set up directory for output
-	OUTPATH=${OUTPUT}_c_n_${OUTPUT}.flib_10000_1000_t2.5_Seg${SEGMENT_LENGTH}_linear/$HOST
+	OUTPATH=${OUTPUT}_c_n_${OUTPUT}.flib_${GROWTH_MOVES}_${MOVES}_t2.5_Seg${SEGMENT_LENGTH}_linear/$HOST
 	mkdir -p $OUTPATH
 
 	### run saint2 and store the filename of the decoy generated on the variable "$FILE" ###
-	FILE=`$SAINT2/scripts/eleanor_run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib 10000 1000 2.5 segment $SEGMENT_LENGTH linear`
+	FILE=`$SAINT2/scripts/eleanor_run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib $GROWTH_MOVES $MOVES 2.5 segment $SEGMENT_LENGTH linear`
 
 	# get the last part of the filename after the last underscore (process ID)
 	PID=${FILE##*_}
@@ -25,8 +29,10 @@ then
 	### get the scores of the final decoy that has been generated ###
 	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
 	
+	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
-	for FRAC in perc part; do
+	#for FRAC in perc part; do
+	for FRAC in part; do
 		COUNT=1
 		for i in `ls -v $OUTPATH/${FILE}_${FRAC}*`; do
 			echo "MODEL       " $COUNT >> $OUTPATH/${FILE}_${FRAC}
@@ -54,7 +60,8 @@ then
 		DIAM=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Diameter =/ { print $NF; }'`
 		TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
 		if [ -n "$TM" ]; then
-			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
+			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
+			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
 		fi
 	fi
 	rm $HOST/$OUTPUT/temp_$$
