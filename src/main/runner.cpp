@@ -207,7 +207,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 		{
 			if (!m_start_struct.empty())
 			{
-				if (!m_peptide.read_segment_from_pdb(m_start_struct.c_str(), m_extender->initial_residues()))
+				if (!m_peptide.read_segment_from_pdb(m_start_struct.c_str(), m_extender->initial_residues() + 1))
 				{
 					std::cerr << "Error while reading start structure "
 						<< m_start_struct << "\n";
@@ -229,7 +229,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 
 				std::cout << "starting init sequential from pdb segment\n";
 				m_mover->init_sequential_from_segment(m_peptide,
-						m_extender->initial_residues(), &observer);
+						m_extender->initial_residues() + 1, &observer);
 
 				sprintf(pdb_out,"%s_part%dtest2",m_outfile.c_str(),m_peptide.length());
 				m_peptide.write_pdb(pdb_out);
@@ -298,7 +298,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 
                                 /* EDIT: Saulo on March, 18th */
                                 /* Print decoys once 25,50,75,100... residues have been extruded */
-                                if(m_peptide.length() % 25 == 0)
+                                if(m_peptide.length() % 1 == 0)
                                 {
                                         char pdb_out[150];
                                         sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
@@ -337,6 +337,9 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 				m_no_sel_count = 0;
 
 				observer.after_extend(this, num_res);
+	//			char pdb_out[150];
+	//			sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
+	//			m_peptide.write_pdb(pdb_out);
 
 				m_curr_length_moves = 0;
 				m_no_sel_count = 0;
@@ -361,10 +364,6 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 			m_mover->do_random_move(m_peptide, num_candidates,
 				exhaustive_for_pos, candidate, &observer);
 
-			//// added to get printout after every proposed move
-			//char pdb_out[150];
-			//sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
-			//m_peptide.write_pdb(pdb_out);
 
 			double progress = m_curr_length_moves /
 				(double) (m_peptide.full_grown() ? m_move_limit :
@@ -416,6 +415,10 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 			m_curr_length_moves++;
 			observer.after_move(this, candidate, candidate_score, choice,
 				is_best, best_score);
+			// added to get printout after every proposed move
+			//char pdb_out[150];
+			//sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
+			//m_peptide.write_pdb(pdb_out);
 		}
 
 		if (best_score < m_curr_score)

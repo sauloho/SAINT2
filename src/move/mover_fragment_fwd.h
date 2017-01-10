@@ -76,7 +76,8 @@ private:
 
 	// set the torsion and bond angles in the peptide to the angles in the
 	// fragment (starting from p_start_index)
-	void change_angles(Peptide &p, int p_start_index, const Fragment *f);
+	void change_angles(Peptide &p, int p_start_index, const Fragment *f,
+			int f_start_index, int f_end_index);
 
 	// add a new fragment
 	virtual Fragment *add_fragment(int start_pos, int length);

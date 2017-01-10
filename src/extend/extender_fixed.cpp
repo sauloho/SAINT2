@@ -1,5 +1,6 @@
 #include <cstdlib> // PG added this
 #include <iostream>
+#include <math.h>
 #include "config.h"
 #include "sequence.h"
 #include "extender.h"
@@ -81,54 +82,66 @@ void Extender_Fixed::calculate_num_moves(const Sequence &seq)
 	int num = m_growth_moves / n;
 	extra = m_growth_moves - (num * n);
 
-	for (int i = m_initial_res;i < full;i += m_extrude_res)
+	if (m_move_distrib == Distrib_Fixed)
 	{
-		m_moves[i] = num;
+		for (int i = m_initial_res;i < full;i += m_extrude_res)
+		{
+			m_moves[i] = num;
+		}
+
+		// add the left over moves to the later extrusions
+	// std::cout << "ADDING " << extra << " EXTRA\n";
+
+		for (int k = full - 1;k > 0 && extra > 0;k--)
+		{
+			if (m_moves[k] != -1)
+			{
+				++m_moves[k];
+				--extra;
+			}
+		}
 	}
 	
 	if (m_move_distrib == Distrib_Linear)
 	{
-		int n1 = m_initial_res;
-		int n2 = full - 1;
-		while (m_moves[n2] == -1) { n2--; }
+		// sum of all lengths at which moves are performed
+		// up to and including this length
+		std::vector<int> cumulative_lengths;
+		cumulative_lengths.resize(full);
 
-		int start = n1;
-		int end = n2;
-		int mid = (start + end) / 2;
+		// rounded number of moves which should have been
+		// performed before start of next extrusion
+		std::vector<int> cumulative_moves;
+		cumulative_moves.resize(full);
 
-// std::cout << "MID = " << mid << ", START/END = "
-// << start << "/" << end << "\n";
-
-		while (n1 < mid)
+		std::cout << "total moves: " << m_growth_moves << "\n";
+		std::cout << "i/Cumulative lengths/Cumulative moves/moves:\n";
+		for (int i = 0; i < m_initial_res; i++)
 		{
-			double frac = (double) (n1 - start) / (double) (mid - start);
-			int val = (int) (frac * m_moves[n1] + 0.5);
-
-			if (val < 1) { val = 1; }
-
-			int diff = m_moves[n1] - val;
-
-			m_moves[n1] = val;
-			m_moves[n2] += diff;
-
-			for (n1++;m_moves[n1] == -1;n1++)
-			{ }
-
-			for (n2--;m_moves[n2] == -1;n2--)
-			{ }
+			cumulative_lengths[i] = 0;
+			cumulative_moves[i] = 0;
+			std::cout << i << "\t";
+			std::cout << cumulative_lengths[i] << "\t";
+			std::cout << cumulative_moves[i] << "\t";
+			std::cout << m_moves[i] << "\n";
 		}
-	}
 
-	// add the left over moves to the later extrusions
-// std::cout << "ADDING " << extra << " EXTRA\n";
-
-	for (int k = full - 1;k > 0 && extra > 0;k--)
-	{
-		if (m_moves[k] != -1)
+		for (int i = m_initial_res; i < full; i++)
 		{
-			++m_moves[k];
-			--extra;
+			cumulative_lengths[i] = cumulative_lengths[i-1] + i;
 		}
+
+
+		for (int i = m_initial_res; i < full; i++)
+		{
+			cumulative_moves[i] = round( m_growth_moves * cumulative_lengths[i] / (float) cumulative_lengths[full - 1] );
+			m_moves[i] = cumulative_moves[i] - cumulative_moves[i - 1];
+			std::cout << i << "\t";
+			std::cout << cumulative_lengths[i] << "\t";
+			std::cout << cumulative_moves[i] << "\t";
+			std::cout << m_moves[i] << "\n";
+		}
+
 	}
 
 	// print out to check move distibution
