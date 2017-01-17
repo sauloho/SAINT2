@@ -77,7 +77,7 @@ c) cotrans="true"
 	   exit 1
    fi
 
-   if [ $# -gt 11 ]
+   if [ $# -gt 12 ]
    then
        echo "$0: Too many arguments" 1>&2
 	   exit 1

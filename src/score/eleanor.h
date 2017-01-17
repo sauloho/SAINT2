@@ -43,8 +43,10 @@ private:
 	int m_num_spans;
 	// a vector of span starts and a vector of span ends
 	//int *m_spans[2];
-	// a vector of whether each residue is in a span
+	// a vector of whether each residue is in centre of a span
 	int m_layer[1000];
+	// a vector of whether each residue is not in a span
+	int m_loop[1000];
 	int m_previous_len;
 };
 

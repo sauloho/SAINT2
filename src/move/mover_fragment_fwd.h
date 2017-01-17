@@ -100,7 +100,7 @@ private:
 
 	// first available ending position in m_fragment (ie. first index
 	// in m_fragment for which m_fragment[index].size() != 0)
-	int m_first_end_pos;
+	int m_build_from_pos;
 };
 
 #endif // MOVER_FRAGMENT_FWD_H_INCLUDED

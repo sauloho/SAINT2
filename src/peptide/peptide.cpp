@@ -493,6 +493,15 @@ bool Peptide::read_pdb(const char *filename, char chain /*=' '*/,
 bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
 	char chain /*=' '*/, bool no_warnings /*=false*/)
 {
+	int segment_start;
+	if (reverseSaint)
+	{
+		segment_start = m_full_length - segment_length;
+	}
+	else
+	{
+		segment_start = 0;
+	}
 	// reset all data in the Peptide
 	//clear();
 	
@@ -526,8 +535,11 @@ bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
 	char buffer[Max_Len];
 	int line_num = 0;
 
+	std::cout << "## starting to read pdb ##\n";
+
 	while (fgets(buffer, Max_Len, file))
 	{
+		std::cout << "--- READING next line ---\n";
 		line_num++;
 		std::string record(buffer, 6);
 
@@ -617,10 +629,16 @@ bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
 				}
 
 				// check if a new residue has been started
+				std::cout << "about to check if new residue has been started\n";
+				std::cout << "curr_res_seq: " << curr_res_seq << "\n";
+				std::cout << "curr_i_code: " << curr_i_code << "\n";
+				std::cout << "rec.res_seq: " << rec.res_seq << "\n";
+				std::cout << "rec.i_code: " << rec.i_code << "\n";
 
 				if (!(rec.res_seq == curr_res_seq &&
 					  rec.i_code == curr_i_code))
 				{
+					std::cout << "checkpoint 0\n";
 // std::cout << "NEW RES " << rec.res_seq << "\n";
 					// check for missing residues (gaps in sequence numbering)
 					//
@@ -681,18 +699,32 @@ bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
 
 					if (m_length == segment_length)
 					{
+						std::cout << "finished reading segment: " << m_length << " residues\n";
 						break;
 					}
 
-					m_length++;
+					res_index++;
+					curr_res_seq = rec.res_seq;
+					curr_i_code = rec.i_code;
+					std::cout << "curr_res_seq: " << curr_res_seq << "\n";
+					std::cout << "curr_i_code: " << curr_i_code << "\n";
+					std::cout << "current segment length: " << m_length << " residues\n";
+					std::cout << "current residue counter: " << res_index << "\n";
+					std::cout << "segment_start: " << segment_start << "\n";
+
+					if (res_index >= segment_start)
+					{
+						std::cout << "checkpoint 1\n";
+						m_length++;
+					}
+
+					std::cout << "checkpoint 2\n";
 					//res_index = (int) m_res.size();
-					res_index = m_length - 1;
 					std::cout << "res_index: " << res_index << "\n";
+					std::cout << "checkpoint 3\n";
 					//m_res.resize(res_index + 1);
 					//m_conf.set_num_res(res_index + 1);
 
-					curr_res_seq = rec.res_seq;
-					curr_i_code = rec.i_code;
 
 					res = &m_res[res_index];
 					//res->clear();
@@ -711,8 +743,10 @@ bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
 				}
 				else   // same residue as last ATOM record
 				{
+					std::cout << "checkpoint 4\n";
 					if (aa != res->amino())
 					{
+						std::cout << "checkpoint 4.1\n";
 						/***
 						if (!no_warnings)
 						{
@@ -727,10 +761,25 @@ bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
 
 						continue;
 					}
+					std::cout << "checkpoint 4.2\n";
+				}
+
+				if (res_index < segment_start)
+				{
+					std::cout << "haven't reached segment start yet\n";
+					continue;
+				}
+				else
+				{
+					std::cout << "we're in the segment\n";
+					std::cout << "res_index: " << res_index << "\n";
+					std::cout << "segment_start: " << segment_start << "\n";
 				}
 
 				// add the new atom to the residue
+				std::cout << "checkpoint 5\n";
 				Atom_Type t(rec.name.c_str());
+				std::cout << "checkpoint 6\n";
 			
 				if (t.undefined())
 				{
@@ -754,8 +803,13 @@ bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
 					continue;
 				}
 
+				std::cout << "checkpoint 7\n";
+				std::cerr << "rec.name: " << rec.name << "\n";
+				std::cerr << "aa.name(): " << aa.name() << "\n";
+				std::cerr << "line_num: " << line_num << "\n";
 				if (aa.rapdf_id(t) == -1)
 				{
+					std::cout << "checkpoint 7.0\n";
 					if (!no_warnings)
 					{
 						std::cerr << "Warning: ignoring "
@@ -766,16 +820,26 @@ bool Peptide::read_segment_from_pdb(const char *filename, int segment_length,
 							<< " of " << filename
 							<< "\n";
 					}
+					std::cout << "checkpoint 7.1\n";
 				}
 				else
-				if (res->atom_exists(t))
 				{
-// std::cout << "ADD ATOM " << rec.name << " TO RES " << rec.res_seq << "\n";
-					Atom *a = res->get_or_add_atom(t);
-					std::cout << "HI\n";
-					a->set_pdb_line(line_num);
-					set_atom_pos(res_index, t.type(), rec.pos);
+					std::cout << "checkpoint 7.2\n";
+					if (res->atom_exists(t))
+					{
+						std::cout << "checkpoint 7.3\n";
+	// std::cout << "ADD ATOM " << rec.name << " TO RES " << rec.res_seq << "\n";
+						if (res_index >= segment_start)
+						{
+							std::cout << "checkpoint 7.4\n";
+							Atom *a = res->get_or_add_atom(t);
+							std::cout << "HI\n";
+							a->set_pdb_line(line_num);
+							set_atom_pos(res_index, t.type(), rec.pos);
+						}
+					}
 				}
+				std::cout << "checkpoint 8\n";
 			}
 		}
 	}
@@ -2358,9 +2422,24 @@ void Peptide::idealise()
 
 void Peptide::idealise_bond_lengths()
 {
+	Point n_pos, ca_pos, c_pos;
+	int segment_start;
+	int segment_end;
+	if (reverseSaint)
+	{
+		segment_start = m_full_length - m_length;
+		segment_end = m_full_length;
+	}	
+	else
+	{
+		segment_start = 0;
+		segment_end = m_length;
+	}
+
 	std::cout << "HI ELEANOR idealise_bond_lengths\n";
 	//assert(m_length == m_full_length);
 	std::cout << "m_length: " << m_length << "  m_full_length: " << m_full_length << "\n";
+	std::cout << "segment_start: " << segment_start << "  segment_end: " << segment_end << "\n";
 	std::cout << "HI ELEANOR idealise_bond_lengths\n";
 
 
@@ -2378,19 +2457,19 @@ void Peptide::idealise_bond_lengths()
 	std::vector<double> angle_ca;
 	std::vector<double> angle_c;
 
-	angle_n.resize(m_length);
-	angle_ca.resize(m_length);
-	angle_c.resize(m_length);
+	angle_n.resize(m_full_length);
+	angle_ca.resize(m_full_length);
+	angle_c.resize(m_full_length);
 
-	Point n_pos, ca_pos, c_pos;
-
-	for (int n = 0;n < m_length;n++)
+	for (int n = segment_start;n < segment_end;n++)
 	{
+		std::cout << "idealise residue " << n << "\n";
+		fflush(stdout);
 		n_pos = atom_pos(n, Atom_N);
 		ca_pos = atom_pos(n, Atom_CA);
 		c_pos = atom_pos(n, Atom_C);
 
-		if (n == 0)
+		if (n == segment_start)
 		{
 			angle_n[n] = BOND_ANGLE_C_N_CA;
 		}
@@ -2401,7 +2480,7 @@ void Peptide::idealise_bond_lengths()
 
 		angle_ca[n] = angle_formed(n_pos, ca_pos, c_pos);
 
-		if (n == m_length - 1)
+		if (n == segment_end - 1)
 		{
 			angle_c[n] = BOND_ANGLE_CA_C_N;
 		}
@@ -2418,7 +2497,12 @@ void Peptide::idealise_bond_lengths()
 		*/
 	}
 
-	int i = m_length - 1;
+	std::cout << "------------------\n~~PRINTOUT angles~~\n-----------------\n";
+	for (int i = 0; i < m_full_length; i++)
+	{
+		std::cout << i << "\t" << angle_n[i] << "\t" << angle_ca[i] << "\t" << angle_c[i] << "\t" << m_conf.phi(i + 1) << "\t" << m_conf.omega(i) << "\t" << m_conf.psi(i) << "\n";
+	}
+	int i = segment_end - 1;
 
 	// Handle residue i (the C terminus)
 	// Leave CA where it is, and rescale bond lengths to N and C atoms
@@ -2452,8 +2536,12 @@ void Peptide::idealise_bond_lengths()
 
 	// calculate main chain atom positions for the rest of the residues
 
-	for (i--;i >= 0;i--)
+	std::cout << "------------------\n~~PRINTOUT angles~~\n-----------------\n";
+	std::cout << "segment start: " << segment_start << "  segment_end: " << segment_end << "\n";
+	for (i--;i >= segment_start;i--)
 	{
+		std::cout << i << "\t" << angle_n[i] << "\t" << angle_ca[i] << "\t" << angle_c[i] << "\t" << m_conf.phi(i + 1) << "\t" << m_conf.omega(i) << "\t" << m_conf.psi(i) << "\n";
+		fflush(stdout);
 		c_pos = torsion_to_coord(c_pos, ca_pos, n_pos,
 			BOND_LENGTH_C_N, angle_n[i + 1], m_conf.phi(i + 1),
 			BOND_LENGTH_N_CA);
@@ -2474,6 +2562,8 @@ void Peptide::idealise_bond_lengths()
 			set_atom_pos(i, Atom_CB, estimate_CB_pos(ca_pos, n_pos, c_pos));
 		}
 	}
+	std::cout << "--------------\n~~finished idealising~~\n-----------------\n";
+	fflush(stdout);
 }
 
 double Peptide::radius_of_gyr(int up_to_res /*= -1*/) const

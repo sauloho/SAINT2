@@ -221,9 +221,13 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 				std::cout << "removed non-backbone atoms\n";
 				m_peptide.conf().calc_torsion_angles();
 				std::cout << "calculated torsion angles\n";
+				fflush(stdout);
+				char pdb_out[150];
+				sprintf(pdb_out,"%s_part%dtest0",m_outfile.c_str(),m_peptide.length());
+				m_peptide.write_pdb(pdb_out);
+
 				m_peptide.idealise_bond_lengths();
 
-				char pdb_out[150];
 				sprintf(pdb_out,"%s_part%dtest1",m_outfile.c_str(),m_peptide.length());
 				m_peptide.write_pdb(pdb_out);
 

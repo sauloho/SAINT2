@@ -41,7 +41,7 @@ Fragment *Mover_Fragment_Fwd::random_fragment(int max_end_pos, int *end_pos)
 		max_end_pos = max_frag;
 	}
 
-	int num_possible = max_end_pos - *p_m_first_end_pos + 1;
+	int num_possible = max_end_pos - *p_m_build_from_pos + 1;
 
 	// find a position with at least one fragment in it
 
@@ -55,7 +55,7 @@ Fragment *Mover_Fragment_Fwd::random_fragment(int max_end_pos, int *end_pos)
 			exit(1);
 		}
 
-		*end_pos = rand() % num_possible + *p_m_first_end_pos;
+		*end_pos = rand() % num_possible + *p_m_build_from_pos;
 		num = (int) m_fragment[*end_pos].size();
 	} while (num == 0);
 
@@ -118,15 +118,15 @@ void Mover_Fragment_Fwd::init_sequential(Peptide &p, int initial_length,
 	Run_Observer *observer)
 {
 	// don't limit fragment library use unless we have a long start segment
-	// m_first_end_pos is -1 by default
+	// m_build_from_pos is -1 by default
 	//if (initial_length > 9)
 	//{
 		// we want the last fragment that we are using to have its end at the end
 		// of the segment. Minus 1 allows segment to be used also.
-		//*p_m_first_end_pos = initial_length - 1;
+		//*p_m_build_from_pos = initial_length - 1;
 	//}
 
-	std::cout << "In init_sequential -- m_first_end_pos: " << *p_m_first_end_pos << "\n";
+	std::cout << "In init_sequential -- m_build_from_pos: " << *p_m_build_from_pos << "\n";
 	
 	assert(initial_length > 0);
 	assert(initial_length <= p.full_length());
@@ -150,15 +150,15 @@ void Mover_Fragment_Fwd::init_sequential_from_segment(Peptide &p, int initial_le
 	Run_Observer *observer)
 {
 	// don't limit fragment library use unless we have a long start segment
-	// m_first_end_pos is -1 by default
+	// m_build_from_pos is -1 by default
 	if (initial_length > 9)
 	{
 		// we want the last fragment that we are using to have its end at the end
 		// of the segment. Minus 1 allows segment to be used also.
-		*p_m_first_end_pos = initial_length - 1;
+		*p_m_build_from_pos = initial_length - 1;
 	}
 
-	std::cout << "In init_sequential_from_segment -- m_first_end_pos: " << *p_m_first_end_pos << "\n";
+	std::cout << "In init_sequential_from_segment -- m_build_from_pos: " << *p_m_build_from_pos << "\n";
 	
 	assert(initial_length > 0);
 	assert(initial_length <= p.full_length());
@@ -206,7 +206,7 @@ void Mover_Fragment_Fwd::do_random_move(Peptide &p,
 
 	std::cout << "starting do_random_move change angles\n";
 	// Is the fragment overlapping with the segment?
-	if (start >= *p_m_first_end_pos)
+	if (start >= *p_m_build_from_pos)
 	{
 		// if not, we're fine, use whole fragment
 		change_angles(p, end, f, 0, f->length() - 1);
@@ -214,8 +214,8 @@ void Mover_Fragment_Fwd::do_random_move(Peptide &p,
 	else
 	{
 		// overlapping, so truncate fragment
-		// overlap is *p_m_first_end_pos - start
-		change_angles(p, end, f, *p_m_first_end_pos - start, f->length() - 1);
+		// overlap is *p_m_build_from_pos - start
+		change_angles(p, end, f, *p_m_build_from_pos - start, f->length() - 1);
 		//change_angles(p, end, f, 0, f->length() - 1);
 	}
 	std::cout << "finished do_random_move change angles\n";
@@ -229,9 +229,8 @@ void Mover_Fragment_Fwd::do_random_move(Peptide &p,
 			start = end - f->length() + 1;
 			//change_angles(p, start, f);
 			//change_angles(p, end, f);
-			change_angles(p, end, f, 0, f->length() - 1);
 			// Is the fragment overlapping with the segment?
-			if (start >= *p_m_first_end_pos)
+			if (start >= *p_m_build_from_pos)
 			{
 				// if not, we're fine, use whole fragment
 				change_angles(p, end, f, 0, f->length() - 1);
@@ -239,8 +238,8 @@ void Mover_Fragment_Fwd::do_random_move(Peptide &p,
 			else
 			{
 				// overlapping, so truncate fragment
-				// overlap is *p_m_first_end_pos - start
-				change_angles(p, end, f, *p_m_first_end_pos - start, f->length() - 1);
+				// overlap is *p_m_build_from_pos - start
+				change_angles(p, end, f, *p_m_build_from_pos - start, f->length() - 1);
 				//change_angles(p, end, f, 0, f->length() - 1);
 			}
 		}
@@ -337,10 +336,10 @@ void Mover_Fragment_Fwd::extend(Peptide &p, int num_res,
 	
 	std::cout << "about to do extend change angles\n";
 	std::cout << "p_start_index: " << p_start_index << "\n";
-	std::cout << "*p_m_first_end_pos: " << *p_m_first_end_pos << "\n";
+	std::cout << "*p_m_build_from_pos: " << *p_m_build_from_pos << "\n";
 	std::cout << "new_end: " << new_end << "\n";
 	// Is the fragment overlapping with the segment?
-	if (p_start_index >= *p_m_first_end_pos)
+	if (p_start_index >= *p_m_build_from_pos)
 	{
 		// if not, we're fine, use whole fragment
 		change_angles(p, new_end, f, 0, f->length() - 1);
@@ -348,9 +347,9 @@ void Mover_Fragment_Fwd::extend(Peptide &p, int num_res,
 	else
 	{
 		// overlapping, so truncate fragment
-		// overlap is *p_m_first_end_pos - p_start_index
-		std::cout << "*p_m_first_end_pos - p_start_index - 1: " << *p_m_first_end_pos - p_start_index - 1 << "\n";
-		change_angles(p, new_end, f, *p_m_first_end_pos - p_start_index, f->length() - 1);
+		// overlap is *p_m_build_from_pos - p_start_index
+		std::cout << "*p_m_build_from_pos - p_start_index - 1: " << *p_m_build_from_pos - p_start_index - 1 << "\n";
+		change_angles(p, new_end, f, *p_m_build_from_pos - p_start_index, f->length() - 1);
 		//change_angles(p, new_end, f, 0, f->length() - 1);
 	}
 	std::cout << "finished extend change angles\n";
@@ -371,7 +370,7 @@ void Mover_Fragment_Fwd::change_angles(Peptide &p, int p_end_index,
 	assert(p_end_index - f->length() + 1 >= p.start());
 	std::cout << "passed assertion1\n";
 	int f_part_length = f_end_index - f_start_index + 1;
-	//assert(p_end_index - f_part_length + 1 >= *p_m_first_end_pos);
+	//assert(p_end_index - f_part_length + 1 >= *p_m_build_from_pos);
 	std::cout << "passed assertion2\n";
 
 	bool realign_after = (p_end_index < p.end());
@@ -772,16 +771,16 @@ void Mover_Fragment_Fwd::after_fragments_loaded(int /*c_terminus*/)
 void Mover_Fragment_Fwd::init_start_fragments()
 {
 	m_start_fragment.clear();
-	// m_first_end_pos = -1;
+	// m_build_from_pos = -1;
 
 	// find all fragments that start at position 0
 	// (ie. end at position "pos" and have length "pos + 1")
 
 	for (int pos = 0;pos < (int) m_fragment.size();pos++)
 	{
-		if (*p_m_first_end_pos == -1 && m_fragment[pos].size() != 0)
+		if (*p_m_build_from_pos == -1 && m_fragment[pos].size() != 0)
 		{
-			*p_m_first_end_pos = pos;
+			*p_m_build_from_pos = pos;
 		}
 
 		for (int n = 0;n < (int) m_fragment[pos].size();n++)
@@ -811,7 +810,7 @@ void Mover_Fragment_Fwd::init_distributions()
 
 	m_frag_distrib.resize(m_fragment.size());
 
-	for (pos = *p_m_first_end_pos;pos < m_fragment.size();pos++)
+	for (pos = *p_m_build_from_pos;pos < m_fragment.size();pos++)
 	{
 		for (n = 0;n < m_fragment[pos].size();n++)
 		{

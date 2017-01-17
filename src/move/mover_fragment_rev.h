@@ -32,6 +32,7 @@ public:
 	virtual void init_sequential(Peptide &s, int initial_length,
 		Run_Observer *observer);
 
+	// start a sequential run from a pdb file which has been read in
 	virtual void init_sequential_from_segment(Peptide &s, int initial_length,
 		Run_Observer *observer);
 
@@ -75,7 +76,8 @@ private:
 
 	// set the torsion and bond angles in the peptide to the angles in the
 	// fragment (ending at p_end_index)
-	void change_angles(Peptide &p, int p_end_index, const Fragment *f);
+	void change_angles(Peptide &p, int p_end_index, const Fragment *f,
+			int f_start_index, int f_end_index);
 
 	// add a new fragment
 	virtual Fragment *add_fragment(int start_pos, int length);
@@ -84,7 +86,7 @@ private:
 	virtual void after_fragments_loaded(int c_terminus);
 
 private:
-	// list of fragments starting at each ending position
+	// list of fragments starting at each starting position
 	Fragment_Vec_Vec m_fragment;
 
 	// probability distribution for fragments at each starting position

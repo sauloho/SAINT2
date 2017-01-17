@@ -165,9 +165,17 @@ void Conformation::calc_torsion_angles()
 	bool gap_prev = true;
 	bool gap_next;
 
-	int num_res = m_peptide->length();
+	int end_res;
+       	if (reverseSaint)
+	{
+		end_res = m_peptide->full_length();
+	}
+	else
+	{
+		end_res = m_peptide->length();
+	}
 
-	for (int n = 0;n < m_peptide->length();n++)
+	for (int n = 0;n < m_peptide->full_length();n++)
 	{
 		gap_next = m_peptide->res(n).missing_after();
 
@@ -177,6 +185,7 @@ void Conformation::calc_torsion_angles()
 		if (prev_c_missing || n_missing || ca_missing || c_missing || gap_prev)
 		{
 			m_res_data[n].phi = TORSION_UNKNOWN;
+			std::cout << n << " PHI" << "\t" << prev_c_missing << "\t" << n_missing << "\t" << ca_missing << "\t" << c_missing << "\t" << gap_prev << "\n";
 		}
 		else
 		{
@@ -184,7 +193,7 @@ void Conformation::calc_torsion_angles()
 				torsion_angle(prev_c_pos, n_pos, ca_pos, c_pos);
 		}
 
-		next_n_missing = ((n == num_res - 1) ||
+		next_n_missing = ((n == end_res - 1) ||
 			!m_peptide->atom_exists(n + 1, Atom_N));
 
 		if (!next_n_missing)
@@ -196,6 +205,7 @@ void Conformation::calc_torsion_angles()
 			gap_next)
 		{
 			m_res_data[n].psi = TORSION_UNKNOWN;
+			std::cout << n << " PSI" << "\t" << n_missing << "\t" << ca_missing << "\t" << c_missing << "\t" << next_n_missing << "\t" << gap_next << "\n";
 		}
 		else
 		{
@@ -203,7 +213,7 @@ void Conformation::calc_torsion_angles()
 				torsion_angle(n_pos, ca_pos, c_pos, next_n_pos);
 		}
 
-		next_ca_missing = ((n == num_res - 1) ||
+		next_ca_missing = ((n == end_res - 1) ||
 			!m_peptide->atom_exists(n + 1, Atom_CA));
 
 		if (!next_ca_missing)
@@ -215,6 +225,7 @@ void Conformation::calc_torsion_angles()
 			gap_next)
 		{
 			m_res_data[n].omega = TORSION_UNKNOWN;
+			std::cout << n << " OMEGA" << "\t" << ca_missing << "\t" << c_missing << "\t" << next_n_missing << "\t" << next_ca_missing << "\t" << gap_next << "\n";
 		}
 		else
 		{
