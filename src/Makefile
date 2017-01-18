@@ -143,7 +143,7 @@ mkdata/main.o: score/scorer.h main/reporter.h main/run_observer.h
 mkdata/main.o: main/static_init.h score/orientation.h score/torsion.h
 mkdata/main.o: main/geom.h
 decoygen/main.o: /usr/include/unistd.h /usr/include/features.h
-decoygen/main.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+decoygen/main.o:  /usr/include/sys/cdefs.h
 decoygen/main.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 decoygen/main.o: /usr/include/bits/posix_opt.h
 decoygen/main.o: /usr/include/bits/environments.h /usr/include/bits/types.h
@@ -165,7 +165,7 @@ decoygen/create_dgen_data.o: score/torsion.h main/c_file.h
 mkdata/filter_len_11.o: main/c_file.h
 clustering/cluster.o: main/c_file.h clustering/cluster_template.h
 timing/timing.o: /usr/include/sys/times.h /usr/include/features.h
-timing/timing.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+timing/timing.o:  /usr/include/sys/cdefs.h
 timing/timing.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 timing/timing.o: /usr/include/time.h /usr/include/bits/types.h
 timing/timing.o: /usr/include/bits/typesizes.h main/config.h
@@ -196,7 +196,7 @@ main/reporter.o: peptide/atom_type.h peptide/pdb_atom_rec.h main/transform.h
 main/reporter.o: main/matrix.h peptide/conformation.h main/common.h
 main/reporter.o: main/config.h main/reporter.h main/run_observer.h
 main/runner.o: /usr/include/stdio.h /usr/include/features.h
-main/runner.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+main/runner.o:  /usr/include/sys/cdefs.h
 main/runner.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 main/runner.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
 main/runner.o: /usr/include/libio.h /usr/include/_G_config.h
@@ -215,7 +215,7 @@ main/matrix.o: main/matrix.h main/point.h
 main/transform.o: main/matrix.h main/point.h main/transform.h
 main/parse.o: main/parse.h
 main/temp_file.o: /usr/include/unistd.h /usr/include/features.h
-main/temp_file.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+main/temp_file.o:  /usr/include/sys/cdefs.h
 main/temp_file.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 main/temp_file.o: /usr/include/bits/posix_opt.h
 main/temp_file.o: /usr/include/bits/environments.h /usr/include/bits/types.h
@@ -230,7 +230,7 @@ move/mover.o: peptide/atom_id.h peptide/codon.h peptide/atom.h
 move/mover.o: peptide/atom_type.h peptide/pdb_atom_rec.h main/point.h
 move/mover.o: main/transform.h main/matrix.h peptide/conformation.h
 move/mover.o: move/mover_fragment.h move/fragment.h /usr/include/assert.h
-move/mover.o: /usr/include/features.h /usr/include/stdc-predef.h
+move/mover.o: /usr/include/features.h 
 move/mover.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 move/mover.o: /usr/include/gnu/stubs.h move/mover_fragment_fwd.h
 move/mover.o: main/distribution.h move/mover_fragment_rev.h
@@ -241,7 +241,7 @@ move/mover_fragment.o: peptide/pdb_atom_rec.h main/point.h main/transform.h
 move/mover_fragment.o: main/matrix.h peptide/conformation.h main/common.h
 move/mover_fragment.o: main/param_list.h move/mover_fragment.h
 move/mover_fragment.o: move/fragment.h /usr/include/assert.h
-move/mover_fragment.o: /usr/include/features.h /usr/include/stdc-predef.h
+move/mover_fragment.o: /usr/include/features.h 
 move/mover_fragment.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 move/mover_fragment.o: /usr/include/gnu/stubs.h main/run_observer.h
 move/mover_fragment.o: main/c_file.h main/config.h main/runner.h
@@ -255,7 +255,7 @@ move/mover_fragment_fwd.o: peptide/conformation.h main/common.h
 move/mover_fragment_fwd.o: main/param_list.h move/mover_fragment_fwd.h
 move/mover_fragment_fwd.o: move/mover_fragment.h move/fragment.h
 move/mover_fragment_fwd.o: /usr/include/assert.h /usr/include/features.h
-move/mover_fragment_fwd.o: /usr/include/stdc-predef.h
+move/mover_fragment_fwd.o: 
 move/mover_fragment_fwd.o: /usr/include/sys/cdefs.h
 move/mover_fragment_fwd.o: /usr/include/bits/wordsize.h
 move/mover_fragment_fwd.o: /usr/include/gnu/stubs.h main/distribution.h
@@ -271,7 +271,7 @@ move/mover_fragment_rev.o: peptide/conformation.h main/common.h
 move/mover_fragment_rev.o: main/param_list.h move/mover_fragment_rev.h
 move/mover_fragment_rev.o: move/mover_fragment.h move/fragment.h
 move/mover_fragment_rev.o: /usr/include/assert.h /usr/include/features.h
-move/mover_fragment_rev.o: /usr/include/stdc-predef.h
+move/mover_fragment_rev.o: 
 move/mover_fragment_rev.o: /usr/include/sys/cdefs.h
 move/mover_fragment_rev.o: /usr/include/bits/wordsize.h
 move/mover_fragment_rev.o: /usr/include/gnu/stubs.h main/distribution.h
@@ -279,7 +279,7 @@ move/mover_fragment_rev.o: main/run_observer.h main/c_file.h main/config.h
 move/mover_fragment_rev.o: main/runner.h main/random.h main/geom.h
 move/mover_fragment_rev.o: main/stream_printf.h
 move/fragment.o: move/fragment.h /usr/include/assert.h
-move/fragment.o: /usr/include/features.h /usr/include/stdc-predef.h
+move/fragment.o: /usr/include/features.h 
 move/fragment.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 move/fragment.o: /usr/include/gnu/stubs.h
 strategy/strategy.o: main/config.h main/param_list.h main/stream_printf.h
@@ -449,13 +449,13 @@ score/ribosome.o: peptide/atom.h peptide/atom_type.h peptide/pdb_atom_rec.h
 score/ribosome.o: main/point.h main/transform.h main/matrix.h
 score/ribosome.o: peptide/conformation.h score/ribosome.h
 peptide/peptide.o: /usr/include/sys/stat.h /usr/include/features.h
-peptide/peptide.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+peptide/peptide.o:  /usr/include/sys/cdefs.h
 peptide/peptide.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 peptide/peptide.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
 peptide/peptide.o: /usr/include/time.h /usr/include/bits/stat.h
 peptide/peptide.o: /usr/include/sys/types.h /usr/include/endian.h
-peptide/peptide.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-peptide/peptide.o: /usr/include/bits/byteswap-16.h /usr/include/sys/select.h
+peptide/peptide.o: /usr/include/bits/endian.h 
+peptide/peptide.o:  /usr/include/sys/select.h
 peptide/peptide.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
 peptide/peptide.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
 peptide/peptide.o: /usr/include/bits/pthreadtypes.h peptide/peptide.h
@@ -478,14 +478,14 @@ peptide/sequence.o: peptide/pdb_atom_rec.h main/point.h main/transform.h
 peptide/sequence.o: main/matrix.h peptide/conformation.h peptide/sequence.h
 peptide/sequence.o: main/param_list.h main/config.h
 peptide/amino.o: /usr/include/strings.h /usr/include/features.h
-peptide/amino.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+peptide/amino.o:  /usr/include/sys/cdefs.h
 peptide/amino.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 peptide/amino.o: /usr/include/xlocale.h peptide/amino.h peptide/atom_id.h
 peptide/amino.o: peptide/atom_type.h
 peptide/codon.o: peptide/amino.h peptide/atom_id.h peptide/codon.h
 peptide/atom_type.o: peptide/atom_type.h peptide/atom_id.h
 peptide/pdb_atom_rec.o: /usr/include/stdio.h /usr/include/features.h
-peptide/pdb_atom_rec.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+peptide/pdb_atom_rec.o:  /usr/include/sys/cdefs.h
 peptide/pdb_atom_rec.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 peptide/pdb_atom_rec.o: /usr/include/bits/types.h
 peptide/pdb_atom_rec.o: /usr/include/bits/typesizes.h /usr/include/libio.h
@@ -540,7 +540,7 @@ main/reporter.o: peptide/atom_type.h peptide/pdb_atom_rec.h main/transform.h
 main/reporter.o: main/matrix.h peptide/conformation.h main/common.h
 main/reporter.o: main/config.h main/reporter.h main/run_observer.h
 main/runner.o: /usr/include/stdio.h /usr/include/features.h
-main/runner.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+main/runner.o:  /usr/include/sys/cdefs.h
 main/runner.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 main/runner.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
 main/runner.o: /usr/include/libio.h /usr/include/_G_config.h
@@ -559,7 +559,7 @@ main/matrix.o: main/matrix.h main/point.h
 main/transform.o: main/matrix.h main/point.h main/transform.h
 main/parse.o: main/parse.h
 main/temp_file.o: /usr/include/unistd.h /usr/include/features.h
-main/temp_file.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+main/temp_file.o:  /usr/include/sys/cdefs.h
 main/temp_file.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 main/temp_file.o: /usr/include/bits/posix_opt.h
 main/temp_file.o: /usr/include/bits/environments.h /usr/include/bits/types.h
@@ -574,7 +574,7 @@ move/mover.o: peptide/atom_id.h peptide/codon.h peptide/atom.h
 move/mover.o: peptide/atom_type.h peptide/pdb_atom_rec.h main/point.h
 move/mover.o: main/transform.h main/matrix.h peptide/conformation.h
 move/mover.o: move/mover_fragment.h move/fragment.h /usr/include/assert.h
-move/mover.o: /usr/include/features.h /usr/include/stdc-predef.h
+move/mover.o: /usr/include/features.h 
 move/mover.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 move/mover.o: /usr/include/gnu/stubs.h move/mover_fragment_fwd.h
 move/mover.o: main/distribution.h move/mover_fragment_rev.h
@@ -585,7 +585,7 @@ move/mover_fragment.o: peptide/pdb_atom_rec.h main/point.h main/transform.h
 move/mover_fragment.o: main/matrix.h peptide/conformation.h main/common.h
 move/mover_fragment.o: main/param_list.h move/mover_fragment.h
 move/mover_fragment.o: move/fragment.h /usr/include/assert.h
-move/mover_fragment.o: /usr/include/features.h /usr/include/stdc-predef.h
+move/mover_fragment.o: /usr/include/features.h 
 move/mover_fragment.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 move/mover_fragment.o: /usr/include/gnu/stubs.h main/run_observer.h
 move/mover_fragment.o: main/c_file.h main/config.h main/runner.h
@@ -599,7 +599,7 @@ move/mover_fragment_fwd.o: peptide/conformation.h main/common.h
 move/mover_fragment_fwd.o: main/param_list.h move/mover_fragment_fwd.h
 move/mover_fragment_fwd.o: move/mover_fragment.h move/fragment.h
 move/mover_fragment_fwd.o: /usr/include/assert.h /usr/include/features.h
-move/mover_fragment_fwd.o: /usr/include/stdc-predef.h
+move/mover_fragment_fwd.o: 
 move/mover_fragment_fwd.o: /usr/include/sys/cdefs.h
 move/mover_fragment_fwd.o: /usr/include/bits/wordsize.h
 move/mover_fragment_fwd.o: /usr/include/gnu/stubs.h main/distribution.h
@@ -615,7 +615,7 @@ move/mover_fragment_rev.o: peptide/conformation.h main/common.h
 move/mover_fragment_rev.o: main/param_list.h move/mover_fragment_rev.h
 move/mover_fragment_rev.o: move/mover_fragment.h move/fragment.h
 move/mover_fragment_rev.o: /usr/include/assert.h /usr/include/features.h
-move/mover_fragment_rev.o: /usr/include/stdc-predef.h
+move/mover_fragment_rev.o: 
 move/mover_fragment_rev.o: /usr/include/sys/cdefs.h
 move/mover_fragment_rev.o: /usr/include/bits/wordsize.h
 move/mover_fragment_rev.o: /usr/include/gnu/stubs.h main/distribution.h
@@ -623,7 +623,7 @@ move/mover_fragment_rev.o: main/run_observer.h main/c_file.h main/config.h
 move/mover_fragment_rev.o: main/runner.h main/random.h main/geom.h
 move/mover_fragment_rev.o: main/stream_printf.h
 move/fragment.o: move/fragment.h /usr/include/assert.h
-move/fragment.o: /usr/include/features.h /usr/include/stdc-predef.h
+move/fragment.o: /usr/include/features.h 
 move/fragment.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
 move/fragment.o: /usr/include/gnu/stubs.h
 strategy/strategy.o: main/config.h main/param_list.h main/stream_printf.h
@@ -793,13 +793,13 @@ score/ribosome.o: peptide/atom.h peptide/atom_type.h peptide/pdb_atom_rec.h
 score/ribosome.o: main/point.h main/transform.h main/matrix.h
 score/ribosome.o: peptide/conformation.h score/ribosome.h
 peptide/peptide.o: /usr/include/sys/stat.h /usr/include/features.h
-peptide/peptide.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+peptide/peptide.o:  /usr/include/sys/cdefs.h
 peptide/peptide.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 peptide/peptide.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
 peptide/peptide.o: /usr/include/time.h /usr/include/bits/stat.h
 peptide/peptide.o: /usr/include/sys/types.h /usr/include/endian.h
-peptide/peptide.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
-peptide/peptide.o: /usr/include/bits/byteswap-16.h /usr/include/sys/select.h
+peptide/peptide.o: /usr/include/bits/endian.h 
+peptide/peptide.o:  /usr/include/sys/select.h
 peptide/peptide.o: /usr/include/bits/select.h /usr/include/bits/sigset.h
 peptide/peptide.o: /usr/include/bits/time.h /usr/include/sys/sysmacros.h
 peptide/peptide.o: /usr/include/bits/pthreadtypes.h peptide/peptide.h
@@ -822,14 +822,14 @@ peptide/sequence.o: peptide/pdb_atom_rec.h main/point.h main/transform.h
 peptide/sequence.o: main/matrix.h peptide/conformation.h peptide/sequence.h
 peptide/sequence.o: main/param_list.h main/config.h
 peptide/amino.o: /usr/include/strings.h /usr/include/features.h
-peptide/amino.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+peptide/amino.o:  /usr/include/sys/cdefs.h
 peptide/amino.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 peptide/amino.o: /usr/include/xlocale.h peptide/amino.h peptide/atom_id.h
 peptide/amino.o: peptide/atom_type.h
 peptide/codon.o: peptide/amino.h peptide/atom_id.h peptide/codon.h
 peptide/atom_type.o: peptide/atom_type.h peptide/atom_id.h
 peptide/pdb_atom_rec.o: /usr/include/stdio.h /usr/include/features.h
-peptide/pdb_atom_rec.o: /usr/include/stdc-predef.h /usr/include/sys/cdefs.h
+peptide/pdb_atom_rec.o:  /usr/include/sys/cdefs.h
 peptide/pdb_atom_rec.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
 peptide/pdb_atom_rec.o: /usr/include/bits/types.h
 peptide/pdb_atom_rec.o: /usr/include/bits/typesizes.h /usr/include/libio.h

@@ -3,11 +3,13 @@
 #export SAINT2=$HOME/saint2_orig/
 OUTPUT=$1
 METHODS=$2
-export DATA_PATH=`realpath $3`
+cd $3 > /dev/null
+export DATA_PATH=`pwd | tr -d '\n'`
+cd - > /dev/null
 SEGMENT_LENGTH=$4
-LENGTH=`cat $OUTPUT.length | tr -d '\n'`
+LENGTH=`cat $DATA_PATH/$OUTPUT.length | tr -d '\n'`
 INITIAL_LENGTH=9
-GROWTH_MOVES=`bc <<< "10000*($LENGTH-$SEGMENT_LENGTH)^2/($LENGTH-$INITIAL_LENGTH)^2"`
+GROWTH_MOVES=`bc <<< "10000*($LENGTH-$SEGMENT_LENGTH)^2/($LENGTH)^2"`
 MOVES=`bc <<< "1000*($LENGTH-$SEGMENT_LENGTH)/$LENGTH"`
 #SNAPSHOTS=$5
 HOST=`hostname`
@@ -45,7 +47,7 @@ then
 
 	# score the decoy using the scoring or running config file
 	#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
-	$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
+	$SAINT2/bin/saint2 config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
 	if [ "$?" = "0" ]; then
 		SOLV=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Solvation =/ { print $NF; }'`
 		ORIE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Orientation =/ { print $NF; }'`
@@ -100,7 +102,7 @@ then
 
 	# score the decoy using the scoring or running config file
 	#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
-	$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear_rev -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
+	$SAINT2/bin/saint2 config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear_rev -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
 	if [ "$?" = "0" ]; then
 		SOLV=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Solvation =/ { print $NF; }'`
 		ORIE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Orientation =/ { print $NF; }'`

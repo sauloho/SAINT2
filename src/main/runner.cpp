@@ -222,21 +222,21 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 				m_peptide.conf().calc_torsion_angles();
 				std::cout << "calculated torsion angles\n";
 				fflush(stdout);
-				char pdb_out[150];
-				sprintf(pdb_out,"%s_part%dtest0",m_outfile.c_str(),m_peptide.length());
-				m_peptide.write_pdb(pdb_out);
+				//char pdb_out[150];
+				//sprintf(pdb_out,"%s_part%dtest0",m_outfile.c_str(),m_peptide.length());
+				//m_peptide.write_pdb(pdb_out);
 
 				m_peptide.idealise_bond_lengths();
 
-				sprintf(pdb_out,"%s_part%dtest1",m_outfile.c_str(),m_peptide.length());
-				m_peptide.write_pdb(pdb_out);
+				//sprintf(pdb_out,"%s_part%dtest1",m_outfile.c_str(),m_peptide.length());
+				//m_peptide.write_pdb(pdb_out);
 
 				std::cout << "starting init sequential from pdb segment\n";
 				m_mover->init_sequential_from_segment(m_peptide,
 						m_extender->initial_residues() + 1, &observer);
 
-				sprintf(pdb_out,"%s_part%dtest2",m_outfile.c_str(),m_peptide.length());
-				m_peptide.write_pdb(pdb_out);
+				//sprintf(pdb_out,"%s_part%dtest2",m_outfile.c_str(),m_peptide.length());
+				//m_peptide.write_pdb(pdb_out);
 
 			}
 			else
@@ -302,7 +302,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 
                                 /* EDIT: Saulo on March, 18th */
                                 /* Print decoys once 25,50,75,100... residues have been extruded */
-                                if(m_peptide.length() % 1 == 0)
+                                if(m_peptide.length() % 25 == 0)
                                 {
                                         char pdb_out[150];
                                         sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());

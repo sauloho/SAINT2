@@ -86,7 +86,7 @@ private:
 	int m_build_from_pos;	// first end position we're using fragments for
 protected:
 	// pointer to first end position we're using fragments for
-	int* p_m_build_from_pos = &m_build_from_pos;
+	int* p_m_build_from_pos;
 };
 
 #endif // MOVER_FRAGMENT_H_INCLUDED

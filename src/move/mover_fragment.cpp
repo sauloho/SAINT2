@@ -30,6 +30,7 @@ Mover_Fragment::Mover_Fragment()
 	: m_double_replacement_prob(0.0), m_fragments_loaded(false),
 	  m_build_from_pos(-1)
 {
+	p_m_build_from_pos = &m_build_from_pos;
 }
 
 Mover_Fragment::~Mover_Fragment()

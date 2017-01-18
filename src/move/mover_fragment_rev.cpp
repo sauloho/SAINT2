@@ -217,7 +217,7 @@ void Mover_Fragment_Rev::do_random_move(Peptide &p,
 	//change_angles(p, end, f);
 	//change_angles(p, start, f);
 
-	std::cout << "starting do_random_move change angles\n";
+	//std::cout << "starting do_random_move change angles\n";
 	// Is the fragment overlapping with the segment?
 	if (end <= *p_m_build_from_pos)
 	{
@@ -231,7 +231,7 @@ void Mover_Fragment_Rev::do_random_move(Peptide &p,
 		change_angles(p, start, f, 0, f->length() - 1 - (end - *p_m_build_from_pos));
 		//change_angles(p, start, f, 0, f->length() - 1);
 	}
-	std::cout << "finished do_random_move change angles\n";
+	//std::cout << "finished do_random_move change angles\n";
 
 	if (m_double_replacement_prob != 0.0)
 	{
@@ -348,10 +348,10 @@ void Mover_Fragment_Rev::extend(Peptide &p, int num_res,
 	//change_angles(p, p_end_index, f);
 	//change_angles(p, new_start, f);
 	
-	std::cout << "about to do extend change angles\n";
-	std::cout << "p_end_index: " << p_end_index << "\n";
-	std::cout << "*p_m_build_from_pos: " << *p_m_build_from_pos << "\n";
-	std::cout << "new_start: " << new_start << "\n";
+	//std::cout << "about to do extend change angles\n";
+	//std::cout << "p_end_index: " << p_end_index << "\n";
+	//std::cout << "*p_m_build_from_pos: " << *p_m_build_from_pos << "\n";
+	//std::cout << "new_start: " << new_start << "\n";
 	// Is the fragment overlapping with the segment?
 	if (p_end_index <= *p_m_build_from_pos)
 	{
@@ -363,11 +363,11 @@ void Mover_Fragment_Rev::extend(Peptide &p, int num_res,
 		// overlapping, so truncate fragment
 		// overlap is (p_end_index - *p_m_build_from_pos)
 		// I really don't know why there's a minus 1 on this line in the fwd version:
-		std::cout << "p_end_index - *p_m_build_from_pos: " << p_end_index - *p_m_build_from_pos << "\n";
+		//std::cout << "p_end_index - *p_m_build_from_pos: " << p_end_index - *p_m_build_from_pos << "\n";
 		change_angles(p, new_start, f, 0, f->length() - 1 - (p_end_index - *p_m_build_from_pos));
 		//change_angles(p, new_start, f, 0, f->length() - 1);
 	}
-	std::cout << "finished extend change angles\n";
+	//std::cout << "finished extend change angles\n";
 
 	if (ribosome_wall && !p.full_grown())
 	{
@@ -381,15 +381,15 @@ void Mover_Fragment_Rev::extend(Peptide &p, int num_res,
 void Mover_Fragment_Rev::change_angles(Peptide &p, int p_start_index,
 	const Fragment *f, int f_start_index, int f_end_index)
 {
-	std::cout << "starting assertions\n";
+	//std::cout << "starting assertions\n";
 	assert(p_start_index >= 0);
-	std::cout << "passed assertion0\n";
+	//std::cout << "passed assertion0\n";
 	int p_end_index = p_start_index + f->length() - 1;
 	assert(p_end_index < p.full_length());
-	std::cout << "passed assertion1\n";
+	//std::cout << "passed assertion1\n";
 	//int f_part_length = f_end_index - f_start_index + 1;
 	//assert(p_end_index - f_part_length + 1 >= *p_m_build_from_pos);
-	std::cout << "passed assertion2\n";
+	//std::cout << "passed assertion2\n";
 
 	bool realign_before = (p_start_index > p.start());
 	Point old_C, old_N, old_CA;
@@ -399,8 +399,8 @@ void Mover_Fragment_Rev::change_angles(Peptide &p, int p_start_index,
 		old_C = p.atom_pos(p_start_index - 1, Atom_C);
 		old_N = p.atom_pos(p_start_index, Atom_N);
 		old_CA = p.atom_pos(p_start_index, Atom_CA);
-std::cout << "checkpoint 1\n";
-fflush(stdout);
+//std::cout << "checkpoint 1\n";
+//fflush(stdout);
 	}
 
 	int n = f_end_index;			// position in fragment
@@ -408,8 +408,8 @@ fflush(stdout);
 
 	if (i == p.length() - 1)
 	{
-std::cout << "checkpoint 2\n";
-fflush(stdout);
+//std::cout << "checkpoint 2\n";
+//fflush(stdout);
 		Point n_pos, ca_pos, c_pos, pos;
 		get_initial_ideal(&n_pos, &ca_pos, &c_pos, f->ca_angle(f_end_index));
 		p.set_atom_pos(i, Atom_N, n_pos),
@@ -422,8 +422,8 @@ fflush(stdout);
 		}
 
 		// calculate where next N would be to get position for O
-std::cout << "checkpoint 3\n";
-fflush(stdout);
+//std::cout << "checkpoint 3\n";
+//fflush(stdout);
 
 		Point est_n_pos = torsion_to_coord(n_pos, ca_pos, c_pos,
 			BOND_LENGTH_C_N,
@@ -442,8 +442,8 @@ fflush(stdout);
 
 		n--;
 		i--;
-std::cout << "checkpoint 4\n";
-fflush(stdout);
+//std::cout << "checkpoint 4\n";
+//fflush(stdout);
 	}
 
 	Point ca_pos = p.atom_pos(i + 1, Atom_CA);
@@ -452,8 +452,8 @@ fflush(stdout);
 
 	for ( ;n >= f_start_index;n--, i--)
 	{
-std::cout << "checkpoint 5\n";
-fflush(stdout);
+//std::cout << "checkpoint 5\n";
+//fflush(stdout);
 		ca_pos = torsion_to_coord(ca_pos, n_pos, c_pos, BOND_LENGTH_C_C,
 			f->c_angle(n), f->omega(n), BOND_LENGTH_C_N);
 		p.set_atom_pos(i, Atom_CA, ca_pos);
@@ -470,13 +470,13 @@ fflush(stdout);
 		{
 			p.set_atom_pos(i, Atom_CB, estimate_CB_pos(ca_pos, n_pos, c_pos));
 		}
-std::cout << "checkpoint 6\n";
-fflush(stdout);
+//std::cout << "checkpoint 6\n";
+//fflush(stdout);
 
 		if (i > 0)
 		{
-std::cout << "checkpoint 7\n";
-fflush(stdout);
+//std::cout << "checkpoint 7\n";
+//fflush(stdout);
 			c_pos = torsion_to_coord(c_pos, ca_pos, n_pos, BOND_LENGTH_C_N,
 				f->n_angle(n), f->phi(n), BOND_LENGTH_N_CA);
 			p.set_atom_pos(i - 1, Atom_C, c_pos);
@@ -486,13 +486,13 @@ fflush(stdout);
 
 	if (realign_before)
 	{
-std::cout << "checkpoint 8\n";
-fflush(stdout);
+//std::cout << "checkpoint 8\n";
+//fflush(stdout);
 		Point new_C = p.atom_pos(p_start_index - 1, Atom_C);
 		Point new_N = p.atom_pos(p_start_index, Atom_N);
 		Point new_CA = p.atom_pos(p_start_index, Atom_CA);
-std::cout << "checkpoint 8.0\n";
-fflush(stdout);
+//std::cout << "checkpoint 8.0\n";
+//fflush(stdout);
 
 		// Because the bond lengths are ideal, t.find_alignment() will
 		// align the old C and N atoms exactly onto the new positions.
@@ -507,21 +507,21 @@ fflush(stdout);
 		// The torsion and bond angles for residue (p_start_index)
 		// come from the fragment.
 
-std::cout << old_C.x << "\t" << old_C.y << "\t" << old_C.z << "\n";
-std::cout << old_N.x << "\t" << old_N.y << "\t" << old_N.z << "\n";
-std::cout << old_CA.x << "\t" << old_CA.y << "\t" << old_CA.z << "\n";
-std::cout << new_C.x << "\t" << new_C.y << "\t" << new_C.z << "\n";
-std::cout << new_N.x << "\t" << new_N.y << "\t" << new_N.z << "\n";
-std::cout << new_CA.x << "\t" << new_CA.y << "\t" << new_CA.z << "\n";
-fflush(stdout);
+//std::cout << old_C.x << "\t" << old_C.y << "\t" << old_C.z << "\n";
+//std::cout << old_N.x << "\t" << old_N.y << "\t" << old_N.z << "\n";
+//std::cout << old_CA.x << "\t" << old_CA.y << "\t" << old_CA.z << "\n";
+//std::cout << new_C.x << "\t" << new_C.y << "\t" << new_C.z << "\n";
+//std::cout << new_N.x << "\t" << new_N.y << "\t" << new_N.z << "\n";
+//std::cout << new_CA.x << "\t" << new_CA.y << "\t" << new_CA.z << "\n";
+//fflush(stdout);
 		Transform t;
 		t.find_alignment(old_C, old_N, old_CA, new_C, new_N, new_CA);
-std::cout << "checkpoint 8.01\n";
+//std::cout << "checkpoint 8.01\n";
 
 		for (i = 0;i < p_start_index - 1;i++)
 		{
-std::cout << "checkpoint 8.1: " << i << "\n";
-fflush(stdout);
+//std::cout << "checkpoint 8.1: " << i << "\n";
+//fflush(stdout);
 			for (int a = 0;a < Num_Backbone;a++)
 			{
 				if (!(p.is_glycine(i) && (Atom_Id) a == Atom_CB))
@@ -532,14 +532,14 @@ fflush(stdout);
 		}
 
 		// i equals (p_start_index - 1)
-std::cout << "checkpoint 8.2\n";
-fflush(stdout);
+//std::cout << "checkpoint 8.2\n";
+//fflush(stdout);
 
 		p.transform_pos(i, Atom_N, t);
 		p.transform_pos(i, Atom_CA, t);
 		// Atom_C has already been changed
-std::cout << "checkpoint 8.3\n";
-fflush(stdout);
+//std::cout << "checkpoint 8.3\n";
+//fflush(stdout);
 
 		if (!p.is_glycine(i))
 		{
@@ -549,16 +549,16 @@ fflush(stdout);
 					p.atom_pos(i, Atom_N),
 					p.atom_pos(i, Atom_C)));
 		}
-std::cout << "checkpoint 8.4\n";
-fflush(stdout);
+//std::cout << "checkpoint 8.4\n";
+//fflush(stdout);
 
 		p.set_atom_pos(i, Atom_O,
 			estimate_O_pos(
 				p.atom_pos(i, Atom_CA),
 				p.atom_pos(i, Atom_C),
 				p.atom_pos(i + 1, Atom_N)));
-std::cout << "checkpoint 9\n";
-fflush(stdout);
+//std::cout << "checkpoint 9\n";
+//fflush(stdout);
 	}
 }
 

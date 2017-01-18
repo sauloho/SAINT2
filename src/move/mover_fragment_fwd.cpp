@@ -204,7 +204,7 @@ void Mover_Fragment_Fwd::do_random_move(Peptide &p,
 	//change_angles(p, start, f);
 	//change_angles(p, end, f);
 
-	std::cout << "starting do_random_move change angles\n";
+	//std::cout << "starting do_random_move change angles\n";
 	// Is the fragment overlapping with the segment?
 	if (start >= *p_m_build_from_pos)
 	{
@@ -218,7 +218,7 @@ void Mover_Fragment_Fwd::do_random_move(Peptide &p,
 		change_angles(p, end, f, *p_m_build_from_pos - start, f->length() - 1);
 		//change_angles(p, end, f, 0, f->length() - 1);
 	}
-	std::cout << "finished do_random_move change angles\n";
+	//std::cout << "finished do_random_move change angles\n";
 
 	if (m_double_replacement_prob != 0.0)
 	{
@@ -334,10 +334,10 @@ void Mover_Fragment_Fwd::extend(Peptide &p, int num_res,
 	//change_angles(p, p_start_index, f);
 	//change_angles(p, new_end, f);
 	
-	std::cout << "about to do extend change angles\n";
-	std::cout << "p_start_index: " << p_start_index << "\n";
-	std::cout << "*p_m_build_from_pos: " << *p_m_build_from_pos << "\n";
-	std::cout << "new_end: " << new_end << "\n";
+	//std::cout << "about to do extend change angles\n";
+	//std::cout << "p_start_index: " << p_start_index << "\n";
+	//std::cout << "*p_m_build_from_pos: " << *p_m_build_from_pos << "\n";
+	//std::cout << "new_end: " << new_end << "\n";
 	// Is the fragment overlapping with the segment?
 	if (p_start_index >= *p_m_build_from_pos)
 	{
@@ -348,11 +348,11 @@ void Mover_Fragment_Fwd::extend(Peptide &p, int num_res,
 	{
 		// overlapping, so truncate fragment
 		// overlap is *p_m_build_from_pos - p_start_index
-		std::cout << "*p_m_build_from_pos - p_start_index - 1: " << *p_m_build_from_pos - p_start_index - 1 << "\n";
+		//std::cout << "*p_m_build_from_pos - p_start_index - 1: " << *p_m_build_from_pos - p_start_index - 1 << "\n";
 		change_angles(p, new_end, f, *p_m_build_from_pos - p_start_index, f->length() - 1);
 		//change_angles(p, new_end, f, 0, f->length() - 1);
 	}
-	std::cout << "finished extend change angles\n";
+	//std::cout << "finished extend change angles\n";
 
 	if (ribosome_wall && !p.full_grown())
 	{
@@ -364,14 +364,14 @@ void Mover_Fragment_Fwd::extend(Peptide &p, int num_res,
 void Mover_Fragment_Fwd::change_angles(Peptide &p, int p_end_index,
 	const Fragment *f, int f_start_index, int f_end_index)
 {
-	std::cout << "starting assertions\n";
+	//std::cout << "starting assertions\n";
 	assert(p_end_index < p.full_length());
-	std::cout << "passed assertion0\n";
+	//std::cout << "passed assertion0\n";
 	assert(p_end_index - f->length() + 1 >= p.start());
-	std::cout << "passed assertion1\n";
+	//std::cout << "passed assertion1\n";
 	int f_part_length = f_end_index - f_start_index + 1;
 	//assert(p_end_index - f_part_length + 1 >= *p_m_build_from_pos);
-	std::cout << "passed assertion2\n";
+	//std::cout << "passed assertion2\n";
 
 	bool realign_after = (p_end_index < p.end());
 	Point old_C, old_N, old_CA;
@@ -390,8 +390,8 @@ double curr_phi = torsion_angle(
 	p.atom_pos(p_end_index + 1, Atom_N),
 	p.atom_pos(p_end_index + 1, Atom_CA),
 	p.atom_pos(p_end_index + 1, Atom_C));
-std::cout << "ORIG phi: " << curr_phi << "  " << p.conf().phi(p_end_index + 1) << "\n";
-assert(true && approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
+//std::cout << "ORIG phi: " << curr_phi << "  " << p.conf().phi(p_end_index + 1) << "\n";
+//assert(true && approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
 
 
 	}
@@ -399,8 +399,8 @@ assert(true && approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
 	int n = f_start_index;				// position in fragment
 	int i = p_end_index - f_part_length + 1;	// position in p
 
-std::cout << "CHANGE_ANGLES: i = " << i << ", p.start() = " << p.start() << ", p.end() = " << p.end() << ", realign_after = " << (realign_after ? "true" : "false") << "\n";
-	std::cout << "ohai1\n";
+//std::cout << "CHANGE_ANGLES: i = " << i << ", p.start() = " << p.start() << ", p.end() = " << p.end() << ", realign_after = " << (realign_after ? "true" : "false") << "\n";
+	//std::cout << "ohai1\n";
 
 	if (i == p.start())
 	{
@@ -410,8 +410,8 @@ std::cout << "CHANGE_ANGLES: i = " << i << ", p.start() = " << p.start() << ", p
 		p.set_atom_pos(i, Atom_CA, ca_pos),
 		p.set_atom_pos(i, Atom_C, c_pos);
 
-std::cout << "INITIAL IDEAL:" << " N = " << n_pos
-<< " CA= " << ca_pos << " C = " << c_pos << "\n";
+//std::cout << "INITIAL IDEAL:" << " N = " << n_pos
+//<< " CA= " << ca_pos << " C = " << c_pos << "\n";
 
 		if (!p.is_glycine(i))
 		{
@@ -436,15 +436,15 @@ std::cout << "INITIAL IDEAL:" << " N = " << n_pos
 	Point n_pos1 = p.atom_pos(i-1, Atom_N);
 
 
-	std::cout << "n_pos1:" << n_pos1.x << " " << n_pos1.y << " " << n_pos1.z << "\n\n";
-	std::cout << "ca_pos:" << ca_pos.x << " " << ca_pos.y << " " << ca_pos.z << "\n";
-	std::cout << "c_pos:" << c_pos.x << " " << c_pos.y << " " << c_pos.z << "\n";
-	std::cout << "n_pos:" << n_pos.x << " " << n_pos.y << " " << n_pos.z << "\n\n";
+	//std::cout << "n_pos1:" << n_pos1.x << " " << n_pos1.y << " " << n_pos1.z << "\n\n";
+	//std::cout << "ca_pos:" << ca_pos.x << " " << ca_pos.y << " " << ca_pos.z << "\n";
+	//std::cout << "c_pos:" << c_pos.x << " " << c_pos.y << " " << c_pos.z << "\n";
+	//std::cout << "n_pos:" << n_pos.x << " " << n_pos.y << " " << n_pos.z << "\n\n";
 
-	std::cout << "ohai2\n";
+	//std::cout << "ohai2\n";
 	for ( ;n < f_end_index + 1;n++, i++)
 	{
-std::cout << "@ n = " << n << " i = " << i << "\n";
+//std::cout << "@ n = " << n << " i = " << i << "\n";
 		double omega_val;
 
 		if (n > f_start_index)
@@ -456,26 +456,26 @@ std::cout << "@ n = " << n << " i = " << i << "\n";
 		{
 			omega_val = p.conf().omega(i - 1);
 		}
-		std::cout << "ca_pos:" << ca_pos.x << " " << ca_pos.y << " " << ca_pos.z << "\n";
-		std::cout << "c_pos:" << c_pos.x << " " << c_pos.y << " " << c_pos.z << "\n";
-		std::cout << "n_pos:" << n_pos.x << " " << n_pos.y << " " << n_pos.z << "\n\n";
+		//std::cout << "ca_pos:" << ca_pos.x << " " << ca_pos.y << " " << ca_pos.z << "\n";
+		//std::cout << "c_pos:" << c_pos.x << " " << c_pos.y << " " << c_pos.z << "\n";
+		//std::cout << "n_pos:" << n_pos.x << " " << n_pos.y << " " << n_pos.z << "\n\n";
 
 		ca_pos = torsion_to_coord(ca_pos, c_pos, n_pos, BOND_LENGTH_N_CA,
 			f->n_angle(n), omega_val, BOND_LENGTH_C_N);
 		p.set_atom_pos(i, Atom_CA, ca_pos);
 
-		std::cout << "c_pos:" << c_pos.x << " " << c_pos.y << " " << c_pos.z << "\n";
-		std::cout << "n_pos:" << n_pos.x << " " << n_pos.y << " " << n_pos.z << "\n";
-		std::cout << "ca_pos:" << ca_pos.x << " " << ca_pos.y << " " << ca_pos.z << "\n\n";
+		//std::cout << "c_pos:" << c_pos.x << " " << c_pos.y << " " << c_pos.z << "\n";
+		//std::cout << "n_pos:" << n_pos.x << " " << n_pos.y << " " << n_pos.z << "\n";
+		//std::cout << "ca_pos:" << ca_pos.x << " " << ca_pos.y << " " << ca_pos.z << "\n\n";
 
 		c_pos = torsion_to_coord(c_pos, n_pos, ca_pos, BOND_LENGTH_C_C,
 			f->ca_angle(n), f->phi(n), BOND_LENGTH_N_CA);
 		p.set_atom_pos(i, Atom_C, c_pos);
 		p.conf().set_phi(i, f->phi(n));
 
-		std::cout << "n_pos:" << n_pos.x << " " << n_pos.y << " " << n_pos.z << "\n";
-		std::cout << "ca_pos:" << ca_pos.x << " " << ca_pos.y << " " << ca_pos.z << "\n";
-		std::cout << "c_pos:" << c_pos.x << " " << c_pos.y << " " << c_pos.z << "\n\n";
+		//std::cout << "n_pos:" << n_pos.x << " " << n_pos.y << " " << n_pos.z << "\n";
+		//std::cout << "ca_pos:" << ca_pos.x << " " << ca_pos.y << " " << ca_pos.z << "\n";
+		//std::cout << "c_pos:" << c_pos.x << " " << c_pos.y << " " << c_pos.z << "\n\n";
 
 		if (!p.is_glycine(i))
 		{
@@ -501,12 +501,12 @@ std::cout << "@ n = " << n << " i = " << i << "\n";
 			 	estimate_O_pos(ca_pos, c_pos, est_n_pos));
 		}
 	}
-	std::cout << "ohai3\n";
+	//std::cout << "ohai3\n";
 
 	if (realign_after)
 	{
-std::cout << "## realign_after: p_end_index = " << p_end_index
-<< ", end = " << p.end() << "\n";
+//std::cout << "## realign_after: p_end_index = " << p_end_index
+//<< ", end = " << p.end() << "\n";
 		p.conf().set_omega(p_end_index, f->omega(f_end_index));
 
 		ca_pos = torsion_to_coord(ca_pos, c_pos, n_pos, BOND_LENGTH_N_CA,
@@ -554,8 +554,8 @@ double curr_phi = torsion_angle(
 	p.atom_pos(p_end_index + 1, Atom_N),
 	p.atom_pos(p_end_index + 1, Atom_CA),
 	p.atom_pos(p_end_index + 1, Atom_C));
-std::cout << "phi: " << curr_phi << "  " << p.conf().phi(p_end_index + 1) << "\n";
-assert(approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
+//std::cout << "phi: " << curr_phi << "  " << p.conf().phi(p_end_index + 1) << "\n";
+//assert(approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
 
 
 		// Atom_N and Atom_CA have already been changed
@@ -592,7 +592,7 @@ assert(approx_equal_angle(curr_phi, p.conf().phi(p_end_index + 1)));
 				next_n_pos));
 	}
 	
-	std::cout << "ohai4\n";
+	//std::cout << "ohai4\n";
 
 //	std::cout << "Verify after change angles: start = "
 //		<< p.start() << " end = " << p.end()
