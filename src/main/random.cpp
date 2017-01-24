@@ -11,9 +11,20 @@ long Random::m_seed = 0;
 
 void Random::set_seed(long seed)
 {
-	m_seed = seed*67+43*sched_getcpu()+37*(int)getpid()+time(NULL);
-	srand((unsigned) m_seed);
-	srand48(m_seed);
+	if (seed == 1)
+	{
+		m_seed = 43*sched_getcpu()+37*(int)getpid()+time(NULL);
+		srand((unsigned) m_seed);
+		srand48(m_seed);
+		std::cout << "Seed set from time: " << m_seed << "\n";
+	}
+	else
+	{
+		m_seed = seed;
+		srand((unsigned) m_seed);
+		srand48(m_seed);
+		std::cout << "Seed set from input: " << m_seed << "\n";
+	}
 }
 
 long Random::get_seed()
