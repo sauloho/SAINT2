@@ -22,14 +22,26 @@ then
 	OUTPATH=${OUTPUT}_c_n_${OUTPUT}.flib_${GROWTH_MOVES}_${MOVES}_t2.5_Seg${SEGMENT_LENGTH}_linear/$HOST
 	mkdir -p $OUTPATH
 
+	# make a cut version of the PDB for the non-segment part if it doesn't already exist
+	CUTPDB=${DATA_PATH}/${OUTPUT}_inverseSeg${SEGMENT_LENGTH}_fwd.pdb
+	if [ ! -a $CUTPDB ]
+	then
+		awk -v seglength="$SEGMENT_LENGTH" '$1 == "ATOM" && $6 > seglength {print $0}' $DATA_PATH/$OUTPUT.pdb > $CUTPDB
+	fi
+
 	### run saint2 and store the filename of the decoy generated on the variable "$FILE" ###
 	FILE=`$SAINT2/scripts/eleanor_run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib $GROWTH_MOVES $MOVES 2.5 segment $SEGMENT_LENGTH linear`
+	awk -v seglength="$SEGMENT_LENGTH" '$1 == "ATOM" && $6 > seglength {print $0}' $OUTPATH/$FILE > $OUTPATH/$FILE.cut
 
 	# get the last part of the filename after the last underscore (process ID)
 	PID=${FILE##*_}
 
 	### get the scores of the final decoy that has been generated ###
-	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+	#TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+
+	# get the TM score of the non-segment part against the non-segment part of the pdb
+	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+	#rm $OUTPATH/$FILE.cut
 	
 	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
@@ -63,7 +75,8 @@ then
 		TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
 		if [ -n "$TM" ]; then
 			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
-			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
+			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
+			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
 		fi
 	fi
 	rm $HOST/$OUTPUT/temp_$$
@@ -77,14 +90,26 @@ then
 	OUTPATH=${OUTPUT}_c_n_${OUTPUT}.flib_${GROWTH_MOVES}_${MOVES}_t2.5_Seg${SEGMENT_LENGTH}_linear_rev/$HOST
 	mkdir -p $OUTPATH
 
+	# make a cut version of the PDB for the non-segment part if it doesn't already exist
+	CUTPDB=${DATA_PATH}/${OUTPUT}_inverseSeg${SEGMENT_LENGTH}_rev.pdb
+	if [ ! -a $CUTPDB ]
+	then
+		awk -v seglength="`expr $LENGTH - $SEGMENT_LENGTH`" '$1 == "ATOM" && $6 <= seglength {print $0}' $DATA_PATH/$OUTPUT.pdb > $CUTPDB
+	fi
+
 	### run saint2 and store the filename of the decoy generated on the variable "$FILE" ###
 	FILE=`$SAINT2/scripts/eleanor_run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib $GROWTH_MOVES $MOVES 2.5 segment $SEGMENT_LENGTH linear rev`
+	awk -v seglength="`expr $LENGTH - $SEGMENT_LENGTH`" '$1 == "ATOM" && $6 <= seglength {print $0}' $OUTPATH/$FILE > $OUTPATH/$FILE.cut
 
 	# get the last part of the filename after the last underscore (process ID)
 	PID=${FILE##*_}
 
 	### get the scores of the final decoy that has been generated ###
-	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+	#TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+	
+	# get the TM score of the non-segment part against the non-segment part of the pdb
+	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+	#rm $OUTPATH/$FILE.cut
 	
 	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
@@ -118,7 +143,8 @@ then
 		TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
 		if [ -n "$TM" ]; then
 			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
-			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$PID.txt
+			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$PID.txt
+			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$PID.txt
 		fi
 	fi
 	rm $HOST/$OUTPUT/temp_$$
