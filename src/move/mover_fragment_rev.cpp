@@ -525,65 +525,32 @@ fflush(stdout);
 		}
 		if (verbose) {
 			char pdb_out[150];
-std::cout << "checkpoint 5.1.1\n";
-fflush(stdout);
 			sprintf(pdb_out,"output/1_part%d_%dpre",p.length(),i);
-std::cout << "checkpoint 5.1.2\n";
-fflush(stdout);
 			p.write_pdb(pdb_out);
-std::cout << "checkpoint 5.1.3\n";
-fflush(stdout);
 		}
-		if (false)
-		{
-			ca_pos = torsion_to_coord(ca_pos, n_pos, c_pos, BOND_LENGTH_C_C,
-				0.1, f->omega(n), BOND_LENGTH_C_N);
-std::cout << "LOOK AT ME: " << f->c_angle(n) << "\n";
-fflush(stdout);
-
-		}
-		else
-		{
-			ca_pos = torsion_to_coord(ca_pos, n_pos, c_pos, BOND_LENGTH_C_C,
-				f->c_angle(n), f->omega(n), BOND_LENGTH_C_N);
-		}
+		ca_pos = torsion_to_coord(ca_pos, n_pos, c_pos, BOND_LENGTH_C_C,
+			f->c_angle(n), f->omega(n), BOND_LENGTH_C_N);
 		p.set_atom_pos(i, Atom_CA, ca_pos);
 		p.conf().set_omega(i, f->omega(n));
-std::cout << "checkpoint 5.1\n";
-fflush(stdout);
 
 		if (verbose) {
 			char pdb_out[150];
-std::cout << "checkpoint 5.1.1\n";
-fflush(stdout);
 			sprintf(pdb_out,"output/1_part%d_%dbefore",p.length(),i);
-std::cout << "checkpoint 5.1.2\n";
-fflush(stdout);
 			p.write_pdb(pdb_out);
-std::cout << "checkpoint 5.1.3\n";
-fflush(stdout);
 		}
-std::cout << "checkpoint 5.2\n";
-fflush(stdout);
 
 		p.set_atom_pos(i, Atom_O, estimate_O_pos(ca_pos, c_pos, n_pos));
 
-std::cout << "checkpoint 5.3\n";
-fflush(stdout);
 		if (verbose) {
 			char pdb_out[150];
 			sprintf(pdb_out,"output/1_part%d_%dafter",p.length(),i);
 			p.write_pdb(pdb_out);
 		}
-std::cout << "checkpoint 5.4\n";
-fflush(stdout);
 
 		if (verbose) {
 			c_to_n = c_pos.minus(n_pos);
 			std::cout << c_to_n.length() << "\t";
 		}
-std::cout << "checkpoint 5.5\n";
-fflush(stdout);
 		n_pos = torsion_to_coord(n_pos, c_pos, ca_pos, BOND_LENGTH_N_CA,
 			f->ca_angle(n), f->psi(n), BOND_LENGTH_C_C);
 		p.set_atom_pos(i, Atom_N, n_pos);

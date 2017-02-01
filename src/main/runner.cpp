@@ -420,14 +420,14 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 			m_curr_length_moves++;
 			observer.after_move(this, candidate, candidate_score, choice,
 				is_best, best_score);
-			// added to get printout after every proposed move
-			if(m_peptide.length() == 221 || m_peptide.length() == 220 )
-			{
-				char pdb_out[150];
-				std::cout << "m_curr_length_moves: " << m_curr_length_moves << "\n";
-				sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
-				m_peptide.write_pdb(pdb_out);
-			}
+			//// added to get printout after every proposed move
+			//if(m_peptide.length() == 221 || m_peptide.length() == 220 )
+			//{
+			//	char pdb_out[150];
+			//	std::cout << "m_curr_length_moves: " << m_curr_length_moves << "\n";
+			//	sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
+			//	m_peptide.write_pdb(pdb_out);
+			//}
 		}
 
 		if (best_score < m_curr_score)

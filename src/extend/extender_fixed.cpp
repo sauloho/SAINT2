@@ -128,7 +128,7 @@ void Extender_Fixed::calculate_num_moves(const Sequence &seq)
 
 		for (int i = m_initial_res; i < full; i++)
 		{
-			cumulative_lengths[i] = cumulative_lengths[i-1] + i;
+			cumulative_lengths[i] = cumulative_lengths[i-1] + i - m_initial_res;
 		}
 
 
