@@ -179,7 +179,7 @@ void Mover_Fragment_Fwd::init_sequential_from_segment(Peptide &p, int initial_le
 }
 
 void Mover_Fragment_Fwd::do_random_move(Peptide &p, int num,
-	bool exhaustive_for_pos, Conf_Vec &result, Run_Observer *observer)
+	bool exhaustive_for_pos, Conf_Vec &result, Run_Observer *observer, int curr_length_moves)
 {
 	result.clear();
 
@@ -188,13 +188,13 @@ void Mover_Fragment_Fwd::do_random_move(Peptide &p, int num,
 		result.push_back(p.conf());
 
 		p.conf().swap(result.back());
-		do_random_move(p, observer);
+		do_random_move(p, observer, curr_length_moves);
 		p.conf().swap(result.back());
 	}
 }
 
 void Mover_Fragment_Fwd::do_random_move(Peptide &p,
-	Run_Observer *observer)
+	Run_Observer *observer, int curr_length_moves)
 {
 	assert(m_fragments_loaded);
 

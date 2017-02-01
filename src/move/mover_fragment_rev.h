@@ -40,11 +40,11 @@ public:
 	// move away from the original structure
 	virtual void do_random_move(Peptide &p, int num,
 		bool exhaustive_for_pos, Conf_Vec &result,
-		Run_Observer *observer);
+		Run_Observer *observer, int curr_length_moves);
 
 	// replace a random fragment in the peptide (may be still growing
 	// or fully grown)
-	void do_random_move(Peptide &p, Run_Observer *observer);
+	void do_random_move(Peptide &p, Run_Observer *observer, int curr_length_moves);
 
 	// extend the peptide by the requested number of residues
 	virtual void extend(Peptide &s, int num_res,
@@ -77,7 +77,7 @@ private:
 	// set the torsion and bond angles in the peptide to the angles in the
 	// fragment (ending at p_end_index)
 	void change_angles(Peptide &p, int p_end_index, const Fragment *f,
-			int f_start_index, int f_end_index);
+			int f_start_index, int f_end_index, int verbose);
 
 	// add a new fragment
 	virtual Fragment *add_fragment(int start_pos, int length);

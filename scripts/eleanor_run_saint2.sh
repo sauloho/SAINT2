@@ -34,16 +34,16 @@ then
 	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
 	#for FRAC in perc part; do
-	for FRAC in part; do
-		COUNT=1
-		for i in `ls -v $OUTPATH/${FILE}_${FRAC}*`; do
-			echo "MODEL       " $COUNT >> $OUTPATH/${FILE}_${FRAC}
-			grep "^ATOM" $i >> $OUTPATH/${FILE}_${FRAC}
-			rm $i
-			echo ENDMDL >> $OUTPATH/${FILE}_${FRAC}
-			((COUNT++))
-		done
-	done
+	#for FRAC in part; do
+	#	COUNT=1
+	#	for i in `ls -v $OUTPATH/${FILE}_${FRAC}*`; do
+	#		echo "MODEL       " $COUNT >> $OUTPATH/${FILE}_${FRAC}
+	#		grep "^ATOM" $i >> $OUTPATH/${FILE}_${FRAC}
+	#		rm $i
+	#		echo ENDMDL >> $OUTPATH/${FILE}_${FRAC}
+	#		((COUNT++))
+	#	done
+	#done
 
 	# score the decoy using the scoring or running config file
 	#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
@@ -63,7 +63,7 @@ then
 		TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
 		if [ -n "$TM" ]; then
 			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
-			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
+			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
 		fi
 	fi
 	rm $HOST/$OUTPUT/temp_$$
@@ -89,16 +89,16 @@ then
 	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
 	#for FRAC in perc part; do
-	for FRAC in part; do
-		COUNT=1
-		for i in `ls -v $OUTPATH/${FILE}_${FRAC}*`; do
-			echo "MODEL       " $COUNT >> $OUTPATH/${FILE}_${FRAC}
-			grep "^ATOM" $i >> $OUTPATH/${FILE}_${FRAC}
-			rm $i
-			echo ENDMDL >> $OUTPATH/${FILE}_${FRAC}
-			((COUNT++))
-		done
-	done
+	#for FRAC in part; do
+	#	COUNT=1
+	#	for i in `ls -v $OUTPATH/${FILE}_${FRAC}*`; do
+	#		echo "MODEL       " $COUNT >> $OUTPATH/${FILE}_${FRAC}
+	#		grep "^ATOM" $i >> $OUTPATH/${FILE}_${FRAC}
+	#		rm $i
+	#		echo ENDMDL >> $OUTPATH/${FILE}_${FRAC}
+	#		((COUNT++))
+	#	done
+	#done
 
 	# score the decoy using the scoring or running config file
 	#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
@@ -118,7 +118,7 @@ then
 		TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
 		if [ -n "$TM" ]; then
 			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
-			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$$.txt
+			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$PID.txt
 		fi
 	fi
 	rm $HOST/$OUTPUT/temp_$$

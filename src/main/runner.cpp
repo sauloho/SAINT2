@@ -300,21 +300,22 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 					break;
 				}
 
-                                /* EDIT: Saulo on March, 18th */
-                                /* Print decoys once 25,50,75,100... residues have been extruded */
-                                if(m_peptide.length() % 25 == 0)
-                                {
-                                        char pdb_out[150];
-                                        sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
-                                        m_peptide.write_pdb(pdb_out);
-                                }
-                                /* Print decoys once ~10%,20%,30%,... of the residues have been extruded */
-              //                  if(m_peptide.length() % (m_peptide.full_length()/10) == 0)
-                //                {
-                  //                      char pdb_out[150];
-                    //                    sprintf(pdb_out,"%s_perc%d",m_outfile.c_str(),m_peptide.length());
-                      //                  m_peptide.write_pdb(pdb_out);
-                        //        }
+				/* EDIT: Saulo on March, 18th */
+				/* Print decoys once 25,50,75,100... residues have been extruded */
+				//if(m_peptide.length() == 112 || m_peptide.length() == 113 )
+	//			if(m_peptide.length() % 1 == 0 )
+	//			{
+	//				char pdb_out[150];
+	//				sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
+	//				m_peptide.write_pdb(pdb_out);
+	//			}
+	//			/* Print decoys once ~10%,20%,30%,... of the residues have been extruded */
+	//			if(m_peptide.length() % (m_peptide.full_length()/10) == 0)
+	//			{
+	//				char pdb_out[150];
+	//				sprintf(pdb_out,"%s_perc%d",m_outfile.c_str(),m_peptide.length());
+	//				m_peptide.write_pdb(pdb_out);
+	//			}
 
 
 
@@ -366,7 +367,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 			bool exhaustive_for_pos = false;
 
 			m_mover->do_random_move(m_peptide, num_candidates,
-				exhaustive_for_pos, candidate, &observer);
+				exhaustive_for_pos, candidate, &observer, m_curr_length_moves);
 
 
 			double progress = m_curr_length_moves /
@@ -420,9 +421,13 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 			observer.after_move(this, candidate, candidate_score, choice,
 				is_best, best_score);
 			// added to get printout after every proposed move
-			//char pdb_out[150];
-			//sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
-			//m_peptide.write_pdb(pdb_out);
+			if(m_peptide.length() == 221 || m_peptide.length() == 220 )
+			{
+				char pdb_out[150];
+				std::cout << "m_curr_length_moves: " << m_curr_length_moves << "\n";
+				sprintf(pdb_out,"%s_part%d_%ld",m_outfile.c_str(),m_peptide.length(),m_curr_length_moves);
+				m_peptide.write_pdb(pdb_out);
+			}
 		}
 
 		if (best_score < m_curr_score)

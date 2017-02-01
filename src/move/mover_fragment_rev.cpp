@@ -135,7 +135,7 @@ void Mover_Fragment_Rev::init_sequential(Peptide &p, int initial_length,
 	Fragment *f = get_starting_fragment(initial_length);
 	p.set_length(f->length());
 	//change_angles(p, p.end(), f);
-	change_angles(p, p.end() - initial_length + 1, f, 0, f->length() - 1);
+	change_angles(p, p.end() - initial_length + 1, f, 0, f->length() - 1, 0);
 
 	if (p.length() < initial_length)
 	{
@@ -191,7 +191,7 @@ void Mover_Fragment_Rev::init_sequential_from_segment(Peptide &p, int initial_le
 
 // DONE
 void Mover_Fragment_Rev::do_random_move(Peptide &p, int num,
-	bool /*exhaustive_for_pos*/, Conf_Vec &result, Run_Observer *observer)
+	bool /*exhaustive_for_pos*/, Conf_Vec &result, Run_Observer *observer, int curr_length_moves)
 {
 	result.clear();
 
@@ -200,15 +200,16 @@ void Mover_Fragment_Rev::do_random_move(Peptide &p, int num,
 		result.push_back(p.conf());
 
 		p.conf().swap(result.back());
-		do_random_move(p, observer);
+		do_random_move(p, observer, curr_length_moves);
 		p.conf().swap(result.back());
 	}
 }
 
 // DONE
 void Mover_Fragment_Rev::do_random_move(Peptide &p,
-	Run_Observer *observer)
+	Run_Observer *observer, int curr_length_moves)
 {
+	int verbose = 0;
 	assert(m_fragments_loaded);
 
 	int start, end;
@@ -216,19 +217,41 @@ void Mover_Fragment_Rev::do_random_move(Peptide &p,
 	end = start + f->length() - 1;
 	//change_angles(p, end, f);
 	//change_angles(p, start, f);
-
-	//std::cout << "starting do_random_move change angles\n";
+	//std::cout << "p.length(): " << p.length() << "\n";
+	if (p.length() == 221 && curr_length_moves == 23)
+	{
+		if (!verbose)
+		{
+			std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~\nReached length 113\n~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+		}
+		verbose = 1;
+	}
+	
+	if (verbose)
+	{
+		std::cout << "starting do_random_move change angles\n";
+	}
 	// Is the fragment overlapping with the segment?
 	if (end <= *p_m_build_from_pos)
 	{
+		if (verbose)
+		{
+			std::cout << "frag doesn't overlap\n";
+		}
 		// if not, we're fine, use whole fragment
-		change_angles(p, start, f, 0, f->length() - 1);
+		change_angles(p, start, f, 0, f->length() - 1, verbose);
 	}
 	else
 	{
+		if (verbose)
+		{
+			std::cout << "frag overlaps\n";
+			std::cout << "frag overlap is: " << (end - *p_m_build_from_pos) << "\n";
+			std::cout << "start: " << start << "  f->length(): " << f->length() << "  end: " << end << "\n";
+		}
 		// overlapping, so truncate fragment
 		// overlap is (end - *p_m_build_from_pos)
-		change_angles(p, start, f, 0, f->length() - 1 - (end - *p_m_build_from_pos));
+		change_angles(p, start, f, 0, f->length() - 1 - (end - *p_m_build_from_pos), verbose);
 		//change_angles(p, start, f, 0, f->length() - 1);
 	}
 	//std::cout << "finished do_random_move change angles\n";
@@ -246,13 +269,13 @@ void Mover_Fragment_Rev::do_random_move(Peptide &p,
 			if (end <= *p_m_build_from_pos)
 			{
 				// if not, we're fine, use whole fragment
-				change_angles(p, start, f, 0, f->length() - 1);
+				change_angles(p, start, f, 0, f->length() - 1, verbose);
 			}
 			else
 			{
 				// overlapping, so truncate fragment
 				// overlap is (end - *p_m_build_from_pos)
-				change_angles(p, start, f, 0, f->length() - 1 - (end - *p_m_build_from_pos));
+				change_angles(p, start, f, 0, f->length() - 1 - (end - *p_m_build_from_pos), verbose);
 				//change_angles(p, start, f, 0, f->length() - 1);
 			}
 		}
@@ -356,7 +379,7 @@ void Mover_Fragment_Rev::extend(Peptide &p, int num_res,
 	if (p_end_index <= *p_m_build_from_pos)
 	{
 		// if not, we're fine, use whole fragment
-		change_angles(p, new_start, f, 0, f->length() - 1);
+		change_angles(p, new_start, f, 0, f->length() - 1, 0);
 	}
 	else
 	{
@@ -364,7 +387,7 @@ void Mover_Fragment_Rev::extend(Peptide &p, int num_res,
 		// overlap is (p_end_index - *p_m_build_from_pos)
 		// I really don't know why there's a minus 1 on this line in the fwd version:
 		//std::cout << "p_end_index - *p_m_build_from_pos: " << p_end_index - *p_m_build_from_pos << "\n";
-		change_angles(p, new_start, f, 0, f->length() - 1 - (p_end_index - *p_m_build_from_pos));
+		change_angles(p, new_start, f, 0, f->length() - 1 - (p_end_index - *p_m_build_from_pos), 0);
 		//change_angles(p, new_start, f, 0, f->length() - 1);
 	}
 	//std::cout << "finished extend change angles\n";
@@ -379,12 +402,12 @@ void Mover_Fragment_Rev::extend(Peptide &p, int num_res,
 
 
 void Mover_Fragment_Rev::change_angles(Peptide &p, int p_start_index,
-	const Fragment *f, int f_start_index, int f_end_index)
+	const Fragment *f, int f_start_index, int f_end_index, int verbose)
 {
 	//std::cout << "starting assertions\n";
 	assert(p_start_index >= 0);
 	//std::cout << "passed assertion0\n";
-	int p_end_index = p_start_index + f->length() - 1;
+	int p_end_index = p_start_index + f_end_index - f_start_index;
 	assert(p_end_index < p.full_length());
 	//std::cout << "passed assertion1\n";
 	//int f_part_length = f_end_index - f_start_index + 1;
@@ -406,10 +429,46 @@ void Mover_Fragment_Rev::change_angles(Peptide &p, int p_start_index,
 	int n = f_end_index;			// position in fragment
 	int i = p_start_index + n;		// position in p
 
-	if (i == p.length() - 1)
+	if (verbose)
 	{
-//std::cout << "checkpoint 2\n";
-//fflush(stdout);
+		Point n_pos;
+		Point ca_pos;
+		Point c_pos;
+		Point next_n_pos;
+
+		Point c_to_n;
+		Point n_to_ca;
+		Point ca_to_c;
+
+		std::cout << "############ whole thing -------------------------------\n";
+		std::cout << "p.full_length()" << p.full_length() << "\n";
+		for (int counter = 0; counter < p.full_length() - 1; counter++)
+		{
+			n_pos = p.atom_pos(counter, Atom_N);
+			ca_pos = p.atom_pos(counter, Atom_CA);
+			c_pos = p.atom_pos(counter, Atom_C);
+			next_n_pos = p.atom_pos(counter+1, Atom_N);
+
+			n_to_ca = n_pos.minus(ca_pos);
+			std::cout << n_to_ca.length() << "\t";
+
+			ca_to_c = ca_pos.minus(c_pos);
+			std::cout << ca_to_c.length() << "\t";
+			
+			if (counter != p.full_length() - 1)
+			{
+				c_to_n = c_pos.minus(next_n_pos);
+				std::cout << c_to_n.length() << "\t";
+			}
+
+			std::cout << "\n";
+		}
+	}
+
+	if (i == p.end() - 1)
+	{
+std::cout << "checkpoint 2\n";
+fflush(stdout);
 		Point n_pos, ca_pos, c_pos, pos;
 		get_initial_ideal(&n_pos, &ca_pos, &c_pos, f->ca_angle(f_end_index));
 		p.set_atom_pos(i, Atom_N, n_pos),
@@ -449,18 +508,82 @@ void Mover_Fragment_Rev::change_angles(Peptide &p, int p_start_index,
 	Point ca_pos = p.atom_pos(i + 1, Atom_CA);
 	Point n_pos = p.atom_pos(i + 1, Atom_N);
 	Point c_pos = p.atom_pos(i, Atom_C);
+	Point c_to_n;
+	Point n_to_ca;
+	Point ca_to_c;
 
+	if (verbose) {
+		std::cout << "-------------------------------\n";
+	}
 	for ( ;n >= f_start_index;n--, i--)
 	{
 //std::cout << "checkpoint 5\n";
 //fflush(stdout);
-		ca_pos = torsion_to_coord(ca_pos, n_pos, c_pos, BOND_LENGTH_C_C,
-			f->c_angle(n), f->omega(n), BOND_LENGTH_C_N);
+		if (verbose) {
+			n_to_ca = n_pos.minus(ca_pos);
+			std::cout << n_to_ca.length() << "\t";
+		}
+		if (verbose) {
+			char pdb_out[150];
+std::cout << "checkpoint 5.1.1\n";
+fflush(stdout);
+			sprintf(pdb_out,"output/1_part%d_%dpre",p.length(),i);
+std::cout << "checkpoint 5.1.2\n";
+fflush(stdout);
+			p.write_pdb(pdb_out);
+std::cout << "checkpoint 5.1.3\n";
+fflush(stdout);
+		}
+		if (false)
+		{
+			ca_pos = torsion_to_coord(ca_pos, n_pos, c_pos, BOND_LENGTH_C_C,
+				0.1, f->omega(n), BOND_LENGTH_C_N);
+std::cout << "LOOK AT ME: " << f->c_angle(n) << "\n";
+fflush(stdout);
+
+		}
+		else
+		{
+			ca_pos = torsion_to_coord(ca_pos, n_pos, c_pos, BOND_LENGTH_C_C,
+				f->c_angle(n), f->omega(n), BOND_LENGTH_C_N);
+		}
 		p.set_atom_pos(i, Atom_CA, ca_pos);
 		p.conf().set_omega(i, f->omega(n));
+std::cout << "checkpoint 5.1\n";
+fflush(stdout);
+
+		if (verbose) {
+			char pdb_out[150];
+std::cout << "checkpoint 5.1.1\n";
+fflush(stdout);
+			sprintf(pdb_out,"output/1_part%d_%dbefore",p.length(),i);
+std::cout << "checkpoint 5.1.2\n";
+fflush(stdout);
+			p.write_pdb(pdb_out);
+std::cout << "checkpoint 5.1.3\n";
+fflush(stdout);
+		}
+std::cout << "checkpoint 5.2\n";
+fflush(stdout);
 
 		p.set_atom_pos(i, Atom_O, estimate_O_pos(ca_pos, c_pos, n_pos));
 
+std::cout << "checkpoint 5.3\n";
+fflush(stdout);
+		if (verbose) {
+			char pdb_out[150];
+			sprintf(pdb_out,"output/1_part%d_%dafter",p.length(),i);
+			p.write_pdb(pdb_out);
+		}
+std::cout << "checkpoint 5.4\n";
+fflush(stdout);
+
+		if (verbose) {
+			c_to_n = c_pos.minus(n_pos);
+			std::cout << c_to_n.length() << "\t";
+		}
+std::cout << "checkpoint 5.5\n";
+fflush(stdout);
 		n_pos = torsion_to_coord(n_pos, c_pos, ca_pos, BOND_LENGTH_N_CA,
 			f->ca_angle(n), f->psi(n), BOND_LENGTH_C_C);
 		p.set_atom_pos(i, Atom_N, n_pos);
@@ -477,10 +600,17 @@ void Mover_Fragment_Rev::change_angles(Peptide &p, int p_start_index,
 		{
 //std::cout << "checkpoint 7\n";
 //fflush(stdout);
+			if (verbose) {
+				ca_to_c = ca_pos.minus(c_pos);
+				std::cout << ca_to_c.length();
+			}
 			c_pos = torsion_to_coord(c_pos, ca_pos, n_pos, BOND_LENGTH_C_N,
 				f->n_angle(n), f->phi(n), BOND_LENGTH_N_CA);
 			p.set_atom_pos(i - 1, Atom_C, c_pos);
 			p.conf().set_phi(i, f->phi(n));
+		}
+		if (verbose) {
+			std::cout << "\n";
 		}
 	}
 
@@ -506,14 +636,15 @@ void Mover_Fragment_Rev::change_angles(Peptide &p, int p_start_index,
 		// are the same as the old values.
 		// The torsion and bond angles for residue (p_start_index)
 		// come from the fragment.
-
-//std::cout << old_C.x << "\t" << old_C.y << "\t" << old_C.z << "\n";
-//std::cout << old_N.x << "\t" << old_N.y << "\t" << old_N.z << "\n";
-//std::cout << old_CA.x << "\t" << old_CA.y << "\t" << old_CA.z << "\n";
-//std::cout << new_C.x << "\t" << new_C.y << "\t" << new_C.z << "\n";
-//std::cout << new_N.x << "\t" << new_N.y << "\t" << new_N.z << "\n";
-//std::cout << new_CA.x << "\t" << new_CA.y << "\t" << new_CA.z << "\n";
-//fflush(stdout);
+if (verbose) {
+std::cout << old_C.x << "\t" << old_C.y << "\t" << old_C.z << "\n";
+std::cout << old_N.x << "\t" << old_N.y << "\t" << old_N.z << "\n";
+std::cout << old_CA.x << "\t" << old_CA.y << "\t" << old_CA.z << "\n";
+std::cout << new_C.x << "\t" << new_C.y << "\t" << new_C.z << "\n";
+std::cout << new_N.x << "\t" << new_N.y << "\t" << new_N.z << "\n";
+std::cout << new_CA.x << "\t" << new_CA.y << "\t" << new_CA.z << "\n";
+fflush(stdout);
+}
 		Transform t;
 		t.find_alignment(old_C, old_N, old_CA, new_C, new_N, new_CA);
 //std::cout << "checkpoint 8.01\n";

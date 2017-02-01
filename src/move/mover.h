@@ -61,7 +61,7 @@ public:
 	// create a set of structures from a peptide; each one is a random
 	// move away from the original structure
 	virtual void do_random_move(Peptide &p, int num, bool exhaustive_for_pos,
-		Conf_Vec &result, Run_Observer *observer) = 0;
+		Conf_Vec &result, Run_Observer *observer, int curr_length_moves) = 0;
 
 	// extend the peptide by the requested number of residues
 	virtual void extend(Peptide &s, int num_res,
