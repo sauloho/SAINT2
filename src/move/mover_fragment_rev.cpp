@@ -218,14 +218,14 @@ void Mover_Fragment_Rev::do_random_move(Peptide &p,
 	//change_angles(p, end, f);
 	//change_angles(p, start, f);
 	//std::cout << "p.length(): " << p.length() << "\n";
-	if (p.length() == 221 && curr_length_moves == 23)
-	{
-		if (!verbose)
-		{
-			std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~\nReached length 113\n~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-		}
-		verbose = 1;
-	}
+	//if (p.length() == 221 && curr_length_moves == 23)
+	//{
+	//	if (!verbose)
+	//	{
+	//		std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~\nReached length 113\n~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+	//	}
+	//	verbose = 1;
+	//}
 	
 	if (verbose)
 	{

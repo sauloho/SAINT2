@@ -94,12 +94,12 @@ then
 	CUTPDB=${DATA_PATH}/${OUTPUT}_inverseSeg${SEGMENT_LENGTH}_rev.pdb
 	if [ ! -a $CUTPDB ]
 	then
-		awk -v seglength="`expr $LENGTH - $SEGMENT_LENGTH`" '$1 == "ATOM" && $6 <= seglength {print $0}' $DATA_PATH/$OUTPUT.pdb > $CUTPDB
+		awk -v seglength="`expr $LENGTH - $SEGMENT_LENGTH`" '$1 == "ATOM" && $6 < seglength {print $0}' $DATA_PATH/$OUTPUT.pdb > $CUTPDB
 	fi
 
 	### run saint2 and store the filename of the decoy generated on the variable "$FILE" ###
 	FILE=`$SAINT2/scripts/eleanor_run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib $GROWTH_MOVES $MOVES 2.5 segment $SEGMENT_LENGTH linear rev`
-	awk -v seglength="`expr $LENGTH - $SEGMENT_LENGTH`" '$1 == "ATOM" && $6 <= seglength {print $0}' $OUTPATH/$FILE > $OUTPATH/$FILE.cut
+	awk -v seglength="`expr $LENGTH - $SEGMENT_LENGTH`" '$1 == "ATOM" && $6 < seglength {print $0}' $OUTPATH/$FILE > $OUTPATH/$FILE.cut
 
 	# get the last part of the filename after the last underscore (process ID)
 	PID=${FILE##*_}
