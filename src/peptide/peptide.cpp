@@ -127,7 +127,7 @@ void Peptide::create_from_sequence(const Sequence &seq)
 {
 	m_full_length = seq.length();
 	m_length = 0;
-	m_res.resize(m_full_length);
+	m_res.resize(m_full_length + 1);
 	m_from_pdb = false;
 
 	int n;
@@ -2443,13 +2443,13 @@ void Peptide::idealise_bond_lengths()
 	std::cout << "HI ELEANOR idealise_bond_lengths\n";
 
 
-	if (num_missing_res() != 0 ||
-		num_missing_backbone() != 0)
-	{
-		std::cerr << "Error: cannot idealise cond lengths, since there are "
-			"missing backbone atoms or residues\n";
-		exit(1);
-	}
+	//if (num_missing_res() != 0 ||
+	//	num_missing_backbone() != 0)
+	//{
+	//	std::cerr << "Error: cannot idealise cond lengths, since there are "
+	//		"missing backbone atoms or residues\n";
+	//	exit(1);
+	//}
 
 	// get the current bond angles for all main chain atoms
 
