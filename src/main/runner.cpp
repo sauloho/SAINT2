@@ -303,12 +303,12 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 				/* EDIT: Saulo on March, 18th */
 				/* Print decoys once 25,50,75,100... residues have been extruded */
 				//if(m_peptide.length() == 112 || m_peptide.length() == 113 )
-	//			if(m_peptide.length() % 1 == 0 )
-	//			{
-	//				char pdb_out[150];
-	//				sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
-	//				m_peptide.write_pdb(pdb_out);
-	//			}
+//				if(m_peptide.length() % 1 == 0 )
+//				{
+//					char pdb_out[150];
+//					sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
+//					m_peptide.write_pdb(pdb_out);
+//				}
 	//			/* Print decoys once ~10%,20%,30%,... of the residues have been extruded */
 	//			if(m_peptide.length() % (m_peptide.full_length()/10) == 0)
 	//			{
