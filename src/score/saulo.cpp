@@ -102,45 +102,6 @@ double Saulo::score(const Peptide& p, bool verbose)
 	double total=0.0;
 	Point cb_i, cb_j;
 
-    if(len != m_previous_len)
-    {
-        if((p.length()-1) % (p.full_length()/10) == 0)
-        {
-		    std::ofstream myfile;
-	        char myString[150];
-		    std::strcpy(myString,"scmatrix_perc");
-		    std::strcat(myString,p.get_filename());
-			myfile.open(myString,std::ios_base::app);
-          	  myfile<<len<<" ";
-           	 for(k=0;k<num_con+1;k++)
-               		 myfile<<  m_satisfied_con[k]<<" ";
-           	 myfile<<"\n";
-           	 m_previous_len=len;
-			myfile.close();
-        }
-
-        if((p.length()-1) % 25 == 0 )
-        {
-		    std::ofstream myfile;
-		    char myString[150];
-		    std::strcpy(myString,"scmatrix_part");
-		    std::strcat(myString,p.get_filename());
-            if((p.length()-1) % (p.full_length()/10) == 0) /* This means that p.get_filename() retrieved the perc file instead of the part file. */
-            {
-                int c;
-                for(c=std::strlen(myString);myString[c]!='p';c--);
-                myString[c+1]='a';
-                myString[c+3]='t';
-		    }
-            myfile.open(myString,std::ios_base::app);
-            myfile<<len<<" ";
-            for(k=0;k<num_con+1;k++)
-                myfile<< m_satisfied_con[k] << " ";
-            myfile<<"\n";
-		    myfile.close();
-        }
-        m_previous_len=len;
-    }
 
     for(k=0;k<num_con;k++) m_satisfied_con[k]=-1;
 
