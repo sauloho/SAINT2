@@ -69,14 +69,6 @@ fi
 cd $out_prefix/$HOST > /dev/null
 
 
-# SILENT MODE:
-SILENT=0;
-if [ $SILENT -eq "1" ]; then
-	err="/dev/null"
-else
-	err="err_${HOST}_$$"
-fi
-
 seed=$(expr `date +%s` + $$ \* 67)
 outputfile=${out_prefix}_${HOST}_$seed
 while [ -a $outputfile ]
@@ -84,6 +76,14 @@ do
 	(( seed++ ))
 	outputfile=${out_prefix}_${HOST}_$seed
 done	
+
+# SILENT MODE:
+SILENT=0;
+if [ $SILENT -eq "1" ]; then
+	err="/dev/null"
+else
+	err="err_${HOST}_$seed"
+fi
 
 while [ $runs -gt 0 ] ; do
 	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../../$config -n 1 -s $seed -o $outputfile
