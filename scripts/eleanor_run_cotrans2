@@ -77,10 +77,17 @@ else
 	err="err_${HOST}_$$"
 fi
 
+seed=$(expr `date +%s` + $$ \* 67)
+outputfile=${out_prefix}_${HOST}_$seed
+while [ -a $outputfile ]
+do
+	(( seed++ ))
+	outputfile=${out_prefix}_${HOST}_$seed
+done	
 
 while [ $runs -gt 0 ] ; do
-	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../../$config -n 1 -s $$ -o ${out_prefix}_${HOST}_$$
+	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../../$config -n 1 -s $seed -o $outputfile
 	runs=`expr $runs - 1`
 done
 
-echo ${out_prefix}_${HOST}_$$
+echo $outputfile
