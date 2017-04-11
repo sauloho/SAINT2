@@ -36,18 +36,20 @@ private:
 	void load_data(const Peptide& p);
 	//
 private:
+	// not in use at the moment
 	std::string m_filename;
+
 	bool m_data_loaded;					// whether data has been loaded
-	int *m_con[2],num_con;
-	// number of spans, read from span file
-	int m_num_spans;
-	// a vector of span starts and a vector of span ends
-	//int *m_spans[2];
-	// a vector of whether each residue is in centre of a span
-	int m_layer[1000];
-	// a vector of whether each residue is not in a span
-	int m_loop[1000];
+	// an array of indeces for looking up each amino acid in the pot table
+	int m_aaindeces[1000];
 	int m_previous_len;
+
+	// the membrane potential table
+	double m_mempot[20][34];
+
+	// the order that amino acids appear as rows in the table
+	std::string zpot_residues_list[20];
+
 };
 
 #endif // ELEANOR_INCLUDED
