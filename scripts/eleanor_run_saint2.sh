@@ -7,7 +7,6 @@ cd $3 > /dev/null
 export DATA_PATH=`pwd | tr -d '\n'`
 cd - > /dev/null
 SEGMENT_LENGTH=$4
-SEGMENT_SCORE_LENGTH=$5
 LENGTH=`cat $DATA_PATH/$OUTPUT.length | tr -d '\n'`
 INITIAL_LENGTH=9
 GROWTH_MOVES=`bc <<< "10000*($LENGTH-$SEGMENT_LENGTH)^2/($LENGTH)^2"`
@@ -24,15 +23,15 @@ then
 	mkdir -p $OUTPATH
 
 	# make a cut version of the PDB for the non-segment part if it doesn't already exist
-	CUTPDB=${DATA_PATH}/${OUTPUT}_inverseSeg${SEGMENT_SCORE_LENGTH}_fwd.pdb
+	CUTPDB=${DATA_PATH}/${OUTPUT}_inverseSeg${SEGMENT_LENGTH}_fwd.pdb
 	if [ ! -a $CUTPDB ]
 	then
-		awk -v seglength="$SEGMENT_SCORE_LENGTH" '$1 == "ATOM" && $6 > seglength {print $0}' $DATA_PATH/$OUTPUT.pdb > $CUTPDB
+		awk -v seglength="$SEGMENT_LENGTH" '$1 == "ATOM" && $6 > seglength {print $0}' $DATA_PATH/$OUTPUT.pdb > $CUTPDB
 	fi
 
 	### run saint2 and store the filename of the decoy generated on the variable "$FILE" ###
 	FILE=`$SAINT2/scripts/eleanor_run_cotrans2 1 $OUTPUT n $DATA_PATH/$OUTPUT.fasta.txt $DATA_PATH/$OUTPUT.flib $GROWTH_MOVES $MOVES 2.5 segment $SEGMENT_LENGTH linear`
-	awk -v seglength="$SEGMENT_SCORE_LENGTH" '$1 == "ATOM" && $6 > seglength {print $0}' $OUTPATH/$FILE > $OUTPATH/$FILE.cut
+	awk -v seglength="$SEGMENT_LENGTH" '$1 == "ATOM" && $6 > seglength {print $0}' $OUTPATH/$FILE > $OUTPATH/$FILE.cut
 
 	# get the last part of the filename after the last underscore (process ID)
 	PID=${FILE##*_}
@@ -41,10 +40,11 @@ then
 	#TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
 
 	# get the TM score of the non-segment part against the non-segment part of the pdb
-	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+	TMCUT=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
 	#rm $OUTPATH/$FILE.cut
 	
-	#rm -f $OUTPATH/scmatrix*
+	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
 	#for FRAC in perc part; do
 	#for FRAC in part; do
@@ -77,7 +77,7 @@ then
 		if [ -n "$TM" ]; then
 			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
 			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
-			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_seg${SEGMENT_LENGTH}_$PID.txt
+			echo $TM $TMCUT $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
 		fi
 	fi
 	rm $HOST/$OUTPUT/temp_$$
@@ -112,7 +112,7 @@ then
 	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
 	#rm $OUTPATH/$FILE.cut
 	
-	#rm -f $OUTPATH/scmatrix*
+	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
 	#for FRAC in perc part; do
 	#for FRAC in part; do
