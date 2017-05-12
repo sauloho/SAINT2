@@ -602,7 +602,7 @@ void CORE_impl::load_rapdf_ids()
 	m_rapdf_ids[26][Atom_C] = 167;	// 167
 }
 
-double CORE_impl::score(const Peptide &p,double w_LJ, double w_RAPDF, bool verbose)
+double CORE_impl::score(const Peptide &p,double w_LJ, double w_RAPDF, bool verbose, bool continuous)
 {
 	// (does nothing if already loaded)
 	load_data();
@@ -689,7 +689,7 @@ double CORE_impl::score(const Peptide &p,double w_LJ, double w_RAPDF, bool verbo
 	total_LJ /= (len + 200.0);
 	total_LJ *= 350.0;
 
-	if (len <= SHORT_PEPTIDE)
+	if (len <= SHORT_PEPTIDE || continuous)
 	{
 		total_RAPDF /= (double) len;
 		// put on the same scale as the other scoring terms

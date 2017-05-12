@@ -20,7 +20,7 @@ public:
 	~Solvation();
 
 	// score a peptide (low scores are better)
-	double score(const Peptide& peptide, bool verbose = false);
+	double score(const Peptide& peptide, bool verbose = false, bool continuous = false);
 
 	// set the name of the solvation data file
 	void set_short_data_file(const std::string &filename);

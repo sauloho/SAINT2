@@ -21,7 +21,7 @@ public:
 	~CORE_impl();
 
 	// score a peptide (low scores are better)
-	double score(const Peptide& peptide,double w_LJ, double w_RAPDF, bool verbose = false);
+	double score(const Peptide& peptide,double w_LJ, double w_RAPDF, bool verbose = false, bool continuous = false);
 	
 	// set the name of the data file for RAPDF
 	void set_data_file(const std::string &filename);

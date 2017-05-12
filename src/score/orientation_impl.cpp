@@ -91,7 +91,7 @@ void Orientation_impl::load_data()
 	m_data_loaded = true;
 }
 
-double Orientation_impl::score(const Peptide& p, bool verbose)
+double Orientation_impl::score(const Peptide& p, bool verbose, bool continuous)
 {
 	// (does nothing if already loaded)
 	load_data();
@@ -193,12 +193,14 @@ double Orientation_impl::score(const Peptide& p, bool verbose)
 		}
 	}
 
-#ifndef RAW_SCORE
-	int len = p.length();
-	total /= (double) (len + 20);
-	// normalise so that all score types have approximately the same range
-	total *= 42.0;
-#endif // RAW_SCORE
+
+    if(1)
+    {
+    	int len = p.length();
+	    total /= (double) (len + 20);
+    	// normalise so that all score types have approximately the same range
+	    total *= 42.0;
+    }
 
 	return total;
 }

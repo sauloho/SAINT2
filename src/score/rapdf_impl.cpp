@@ -151,7 +151,7 @@ void RAPDF_impl::load_data()
 	m_data_loaded = true;
 }
 
-double RAPDF_impl::score(const Peptide &p, bool verbose)
+double RAPDF_impl::score(const Peptide &p, bool verbose, bool continuous)
 {
 	// (does nothing if already loaded)
 	load_data();
@@ -264,22 +264,23 @@ double RAPDF_impl::score(const Peptide &p, bool verbose)
 	// Alter the score so that it has about the same distribution
 	// for all lengths
 
-#ifndef RAW_SCORE
-	int len = p.length();
+    if(1)
+    {
+    	int len = p.length();
 
-	if (len <= SHORT_PEPTIDE)
-	{
-		total /= (double) len;
-		// put on the same scale as the other scoring terms
-		total *= 7.0;
-	}
-	else
-	{
-		total /= sqrt((double) len);
-		// put on the same scale as the other scoring terms
-		total *= 0.75;
-	}
-#endif // RAW_SCORE
+	    if (len <= SHORT_PEPTIDE || continuous)
+    	{
+	    	total /= (double) len;
+		    // put on the same scale as the other scoring terms
+    		total *= 7.0;
+	    }
+    	else
+	    {
+		    total /= sqrt((double) len);
+    		// put on the same scale as the other scoring terms
+	    	total *= 0.75;
+    	}
+    }
 
 	return total;
 }

@@ -14,8 +14,8 @@
 
 const char *Runner::m_config_section =		"general";
 //int template_count = 0;
-
 const char *Runner::c_param_sequential =	"sequential";
+const char *Runner::c_param_print_intermediates = "print_intermediates";
 //const char *Runner::c_param_coil =			"coil";
 const char *Runner::c_param_move_limit =	"moves";
 const char *Runner::c_param_no_sel_limit =	"none selected";
@@ -26,6 +26,7 @@ const char *Runner::c_param_native_struct =	"native_structure";
 
 // default parameter values
 const bool Runner::c_default_sequential		= true;
+const bool Runner::c_default_print_intermediates = false;
 //const bool Runner::c_default_coil			= false;
 const long Runner::c_default_move_limit		= 10000;
 const long Runner::c_default_no_sel_limit	= 0;
@@ -37,6 +38,7 @@ Runner::Runner(Config &config) :
 	m_move_failed(false),
 	m_curr_length_moves(0), m_no_sel_count(0),
 	m_sequential(c_default_sequential),
+    m_print_intermediates(c_default_print_intermediates),
 	//m_coil(c_default_coil),
 	m_move_limit(c_default_move_limit),
 	m_no_sel_limit(c_default_no_sel_limit),
@@ -94,12 +96,17 @@ void Runner::parse_params(const Param_List &params)
 		std::string full_name = m_config_section;
 		full_name += " ";
 		full_name += i->name;
-
+        
         if (i->name == c_param_sequential)
         {
             m_sequential = parse_bool(i->value, full_name);
         }
 		else
+        if (i->name == c_param_print_intermediates)
+        {
+            m_print_intermediates = parse_bool(i->value, full_name);
+        }
+        else
 		/*
         if (i->name == c_param_coil)
         {
@@ -230,6 +237,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 		}
 
 		m_curr_score = m_scorer->score(m_peptide, 0.0);
+        
 		m_prev_score = m_curr_score;
 		m_move_failed = false;
 
@@ -260,23 +268,23 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 					break;
 				}
 
-                                /* EDIT: Saulo on March, 18th */
-                                /* Print decoys once 25,50,75,100... residues have been extruded */
-//                                if(m_peptide.length() % 25 == 0)
-  //                              {
-    //                                    char pdb_out[150];
-      //                                  sprintf(pdb_out,"%s_part%d",m_outfile.c_str(),m_peptide.length());
-        //                                m_peptide.write_pdb(pdb_out);
-          //                      }
-            //                    /* Print decoys once ~10%,20%,30%,... of the residues have been extruded */
-              //                  if(m_peptide.length() % (m_peptide.full_length()/10) == 0)
-                //                {
-                  //                      char pdb_out[150];
-                    //                    sprintf(pdb_out,"%s_perc%d",m_outfile.c_str(),m_peptide.length());
-                      //                  m_peptide.write_pdb(pdb_out);
-                        //        }
-
-
+                /* Print decoys once 25,50,75,100... residues have been extruded */
+                if (m_print_intermediates)
+                {
+                    if(m_peptide.length() % 25 == 0)
+                    {
+                        char pdb_out[150];
+                        sprintf(pdb_out,"%s_part%03d",m_outfile.c_str(),m_peptide.length());
+                        m_peptide.write_pdb(pdb_out);
+                    }
+                    /* Print decoys once ~10%,20%,30%,... of the residues have been extruded */
+                    if(m_peptide.length() % (m_peptide.full_length()/10) == 0)
+                    {
+                        char pdb_out[150];
+                        sprintf(pdb_out,"%s_perc%03d",m_outfile.c_str(), (m_peptide.length()/(m_peptide.full_length()/10))*10);
+                        m_peptide.write_pdb(pdb_out);
+                    }
+                }
 
 				/* (incorrect -- progress based weight is wrong)
 				// use the best scoring structure found at this length
@@ -289,14 +297,15 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 				*/
 
 				// TO DO: should make sure this cast is possible first
-				bool ribosome_wall =
-					((Scorer_Combined*) m_scorer)->ribosome_wall();
+				bool ribosome_wall = ((Scorer_Combined*) m_scorer)->ribosome_wall();
 
 				m_mover->extend(m_peptide, num_res, ribosome_wall, &observer);
 				m_extender->after_extend(m_peptide, this);
 
 				m_prev_score = m_curr_score;
 				m_curr_score = m_scorer->score(m_peptide, 1.0);
+
+
 				m_move_failed = false;
 				m_no_sel_count = 0;
 
@@ -308,6 +317,8 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 				best_score = m_curr_score;
 				best_conf = m_peptide.conf();
 			}
+
+            
 
 			// check if it is time to stop
 			if (m_peptide.full_grown())
@@ -349,12 +360,6 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 				m_curr_score = candidate_score[choice];
 				m_move_failed = false;
 				m_no_sel_count = 0;
-				//sprintf(pdb_out,"Test%5d.pdb",template_count);
-				//if(template_count % 2 == 0)
-				//{
-				//	m_peptide.write_pdb(pdb_out);
-				//}
-                                //template_count++;
 
 				double p1_score = candidate_progress1_score[choice];
 

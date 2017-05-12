@@ -99,9 +99,14 @@ private:
 
 	static const char *c_param_filename[SC_NUM];
 	static const char *c_param_short_filename[SC_NUM];
-
+    
 	static const char *c_param_weight[SC_NUM];
 	static const char *c_param_short_weight[SC_NUM];
+
+    static const char *c_param_raw_scores;
+
+    // default parameter values
+    static const bool c_default_raw_scores;
 
 	RAPDF *m_rapdf;
 	Solvation *m_solvation;
@@ -122,6 +127,7 @@ private:
 
 	double m_weight[SC_NUM];
 	double m_short_weight[SC_NUM];
+    bool m_raw_scores;
 };
 
 #endif // SCORER_COMBINED_INCLUDED

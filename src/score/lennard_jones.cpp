@@ -239,18 +239,16 @@ double Lennard_Jones::score(const Peptide& p, bool verbose /*= false*/)
 		}
 	}
 
-#ifndef RAW_SCORE
+    if(1)
+    {   
+	    int len = p.length();
+        //std::cout << "!!! RAW LJ SCORE = " << total << ", len = " << len << "\n";
 
-	int len = p.length();
-//std::cout << "!!! RAW LJ SCORE = " << total << ", len = " << len << "\n";
+    	// normalise so that all score types have approximately the same range
+	    total /= (len + 200.0);
 
-	// normalise so that all score types have approximately the same range
-	total /= (len + 200.0);
-
-	total *= 350.0;
-
-	// if (len <= SHORT_PEPTIDE)
-#endif // RAW_SCORE
+    	total *= 350.0;
+    }
 
 	return total;
 }

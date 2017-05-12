@@ -267,6 +267,7 @@ echo "[General]" >> $name
 echo >> $name
 echo "sequential = $cotrans" >> $name
 echo "moves = $moves" >> $name
+echo "print_intermediates = false" >> $name
 
 if [ ! -z "$rev" ]
 then

@@ -62,7 +62,7 @@ then
 	mkdir $out_prefix
 fi
 
-cd $out_prefix
+cd $out_prefix > /dev/null
 
 i=0
 while [ \( -f err_s${i} \) -o \( -f ${out_prefix}_s$i \) ] ;
@@ -78,11 +78,11 @@ else
 	err="err_$HOST_pid$$"
 fi
 
+TIME=$(date +%s);
 
 while [ $runs -gt 0 ] ; do
-	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../$config -n 1 -s $i -o ${out_prefix}_s${i}_r$runs_p$$
+	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../$config -n 1 -s $i -o ${out_prefix}_s${i}_t${TIME}_p$$
 	runs=`expr $runs - 1`
 done
-runs=`expr $runs + 1`
 
-echo ${out_prefix}_s${i}_r$runs_p$$
+echo ${out_prefix}_s${i}_t${TIME}_p$$

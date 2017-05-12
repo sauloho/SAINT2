@@ -84,7 +84,6 @@ void Saulo::load_data(const Peptide& p)
 	
 	num_con=con;
 
-    m_satisfied_con = (int *)malloc(sizeof(int)*(num_con+1));
     m_previous_len = 0;
     // p.alloc_satisfied_con (num_con);
 	m_data_loaded = true;
@@ -96,61 +95,18 @@ double Saulo::score(const Peptide& p, bool verbose)
 	load_data(p);
 
 	int len = p.length();
-	int i,j,k,cont=0;
-    int possible_con=0;
+	int i,j,k;
 
 	double total=0.0;
 	Point cb_i, cb_j;
 
-    if(len != m_previous_len)
-    {
-        if((p.length()-1) % (p.full_length()/10) == 0)
-        {
-		    std::ofstream myfile;
-	        char myString[150];
-		    std::strcpy(myString,"scmatrix_perc");
-		    std::strcat(myString,p.get_filename());
-			myfile.open(myString,std::ios_base::app);
-          	  myfile<<len<<" ";
-           	 for(k=0;k<num_con+1;k++)
-               		 myfile<<  m_satisfied_con[k]<<" ";
-           	 myfile<<"\n";
-           	 m_previous_len=len;
-			myfile.close();
-        }
-
-        if((p.length()-1) % 25 == 0 )
-        {
-		    std::ofstream myfile;
-		    char myString[150];
-		    std::strcpy(myString,"scmatrix_part");
-		    std::strcat(myString,p.get_filename());
-            if((p.length()-1) % (p.full_length()/10) == 0) /* This means that p.get_filename() retrieved the perc file instead of the part file. */
-            {
-                int c;
-                for(c=std::strlen(myString);myString[c]!='p';c--);
-                myString[c+1]='a';
-                myString[c+3]='t';
-		    }
-            myfile.open(myString,std::ios_base::app);
-            myfile<<len<<" ";
-            for(k=0;k<num_con+1;k++)
-                myfile<< m_satisfied_con[k] << " ";
-            myfile<<"\n";
-		    myfile.close();
-        }
-        m_previous_len=len;
-    }
-
-    for(k=0;k<num_con;k++) m_satisfied_con[k]=-1;
-
+    /* Main loop */
 	for (k=0;k<num_con;k++)
 	{
 		i = m_con[0][k]; 	j=m_con[1][k];
 
 		if( i-1 >= p.start() &&  i-1 <= p.end() && j-1 <= p.end() && j-1 >= p.start() )
 		{
-			possible_con++;
 			if(std::strcmp(p.res(i-1).amino().abbr(),"GLY") == 0)
 			{
 				cb_i = p.atom_pos(i-1, Atom_CA);				
@@ -168,28 +124,16 @@ double Saulo::score(const Peptide& p, bool verbose)
 			if ( cb_i.distance(cb_j) > 8.0) /* They are predicted to be contacts, but are far away in the model! */
 			{
 				total += cb_i.distance(cb_j) - 8.0;
-				cont++;
-                //std::cout << "0 ";
-                m_satisfied_con[k]=0;
 			}
-            else
-                //std::cout << "1 ";
-                m_satisfied_con[k]=1;
-		}
+         }
 	}
-	
-    if(possible_con)
-	    m_satisfied_con[num_con]=100*(possible_con - cont)/possible_con;
-    else
-        m_satisfied_con[num_con]=-1;
-#ifndef RAW_SCORE
 
+#ifndef RAW_SCORE
 	// Alter the score so that it has about the same distribution
 	// for all lengths
 	total /= sqrt((double) len);
 	// normalise so that all score types have approximately the same range
 	total = total * 28.0;
-	
 #endif // RAW_SCORE
 //	std::cout << "Total = " << total << " !!\n";	
 	return total;

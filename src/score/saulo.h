@@ -39,7 +39,6 @@ private:
 	std::string m_filename;
 	bool m_data_loaded;					// whether data has been loaded
 	int *m_con[2],num_con;
-    int *m_satisfied_con;
     int m_previous_len;
 };
 

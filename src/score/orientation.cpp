@@ -27,11 +27,11 @@ void Orientation::set_long_data_file(const std::string &filename)
 	m_long->set_data_file(filename);
 }
 
-double Orientation::score(const Peptide &p, bool verbose)
+double Orientation::score(const Peptide &p, bool verbose, bool continuous)
 {
-	if (p.length() <= SHORT_PEPTIDE)
+	if (p.length() <= SHORT_PEPTIDE || continuous)
 	{
-		return m_short->score(p, verbose);
+		return m_short->score(p, verbose, continuous);
 	}
 	else
 	{

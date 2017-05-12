@@ -35,11 +35,11 @@ void CORE::set_long_data_file_ori(const std::string &filename)
 	m_long->set_data_file_ori(filename);
 }
 
-double CORE::score(const Peptide &p, double weight1, double weight2, bool verbose)
+double CORE::score(const Peptide &p, double weight1, double weight2, bool verbose, bool continuous)
 {
-	if (p.length() <= SHORT_PEPTIDE)
+	if (p.length() <= SHORT_PEPTIDE || continuous)
 	{
-		return m_short->score(p,weight1,weight2,verbose);
+		return m_short->score(p,weight1,weight2,verbose,continuous);
 	}
 	else
 	{

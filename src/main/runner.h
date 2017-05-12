@@ -137,6 +137,7 @@ private:
 	// config file parameters
 
     static const char *c_param_sequential;
+    static const char *c_param_print_intermediates;
     //static const char *c_param_coil;
 	static const char *c_param_codon_speed_file;
     static const char *c_param_initial_res;
@@ -150,6 +151,7 @@ private:
 	// default parameter values
 
     static const bool c_default_sequential;
+    static const bool c_default_print_intermediates;
     //static const bool c_default_coil;
     static const int c_default_initial_res;
 	static const long c_default_move_limit;
@@ -157,6 +159,8 @@ private:
 
 	/// number of runs to perform
 	int m_num_runs;
+
+    /// boolean flag to indicate when to stop because of contacts
 
 	/// scoring object
 	Scorer *m_scorer;
@@ -199,6 +203,9 @@ private:
 
 	/// sequential or non-sequential
 	bool m_sequential;
+
+    /// print intermediates??
+    bool m_print_intermediates;
 
 	/// whether non-sequential starts as a random coil or fully extended
 	//bool m_coil;

@@ -49,6 +49,8 @@ const char *Scorer_Combined::c_score_name[SC_NUM] =
 	"Ribosome"					// SC_RIBO
 };
 
+const char *Scorer_Combined::c_param_raw_scores = "raw_scores";
+
 const char *Scorer_Combined::c_param_filename[SC_NUM] =
 {
 	"long_solvation_file", 				// SC_SOLV
@@ -126,6 +128,10 @@ const char *Scorer_Combined::c_param_short_weight[SC_NUM] =
 	""					// SC_RIBO
 };
 
+
+const bool Scorer_Combined::c_default_raw_scores             = false;
+
+
 Scorer_Combined::Scorer_Combined()
 {
 	m_solvation = new Solvation;
@@ -143,6 +149,7 @@ Scorer_Combined::Scorer_Combined()
 	m_torsion = new Torsion;
 	m_predtor = new PredTor;
 	m_ribosome = new Ribosome;
+    m_raw_scores = c_default_raw_scores;
 
 	for (int n = 0;n < SC_NUM;n++)
 	{
@@ -271,7 +278,12 @@ bool Scorer_Combined::parse_parameter(const std::string &name,
 			m_short_weight[n] = parse_double(value, full_name);
 			return true;
 		}
-	}
+    }
+    if (name == c_param_raw_scores)
+    {
+        m_raw_scores = parse_bool(value, full_name);
+        return true;
+    }
 
 	return false;
 }
@@ -320,7 +332,6 @@ double Scorer_Combined::score(const Peptide &p, double progress /*= 1.0*/,
 	bool info_on = print_info_when_scoring();
 	double s = 0.0;
 
-
 	bool vbose = verbose();
 
 	double weight_rapdf = (p.length() <= SHORT_PEPTIDE ?
@@ -335,19 +346,18 @@ double Scorer_Combined::score(const Peptide &p, double progress /*= 1.0*/,
 			m_short_weight[n] : m_weight[n]);
 
 
-
 		if (w != 0.0 )
 		{
 			switch (n)
 			{
-				case SC_SOLV:	s = m_solvation->score(p, vbose); break; 
-				case SC_ORIENT:	s = m_orientation->score(p, vbose); break; 
+				case SC_SOLV:	s = m_solvation->score(p, vbose, m_raw_scores); break; 
+				case SC_ORIENT:	s = m_orientation->score(p, vbose, m_raw_scores); break; 
 				/* We want to compute these scores individually to print their values: */
 				case SC_LJ:	if (info_on) s = m_lj->score(p, vbose); break;
-				case SC_RAPDF:	if (info_on) s = m_rapdf->score(p, vbose); break; 
+				case SC_RAPDF:	if (info_on) s = m_rapdf->score(p, vbose, m_raw_scores); break; 
 				case SC_HBOND:	s = m_hbond->score(p, vbose); break;
-				case SC_SAULO:	s = m_saulo->score(p, vbose); break;
-				case SC_CORE:	s = m_core->score(p,weight_lj,weight_rapdf,vbose); break;
+				case SC_SAULO:  s = m_saulo->score(p, vbose); break;
+				case SC_CORE:	s = m_core->score(p,weight_lj,weight_rapdf,vbose,m_raw_scores); break;
 				case SC_PREDSS: s = m_predss->score(p, vbose); break;
 				case SC_RGYR:	s = m_rgyr->score(p, vbose); break;
 				case SC_CONTACT:s = m_contact->score(p, vbose); break;
@@ -373,6 +383,7 @@ double Scorer_Combined::score(const Peptide &p, double progress /*= 1.0*/,
 				total += s;
 		}
 	}
+
 
 	if (progress1_score != NULL)
 	{

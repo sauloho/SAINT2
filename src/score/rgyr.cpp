@@ -34,7 +34,6 @@ Rgyr::~Rgyr()
 
 double Rgyr::score(const Peptide& p, bool verbose) const
 {
-	int len = p.length();	
 	double total=0.0;
 
 //	total = pow(p.radius_of_gyr() - (1.484*pow(len,0.4)+5.33333), 2 )  ;

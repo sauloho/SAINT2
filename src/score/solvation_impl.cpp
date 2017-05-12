@@ -126,7 +126,7 @@ inline Point cbeta_pos(const Peptide &p, int n, bool *failed)
 	}
 }
 
-double Solvation_impl::score(const Peptide &p, bool verbose)
+double Solvation_impl::score(const Peptide &p, bool verbose, bool continuous)
 {
 	// (does nothing if already loaded)
 	load_data();
@@ -193,26 +193,26 @@ std::cout
 		}
 	}
 
-#ifndef RAW_SCORE
-	// Alter the score so that it has about the same distribution
-	// for all lengths
+    if(1)
+    {
+    	// Alter the score so that it has about the same distribution
+	    // for all lengths
 
-	int len = p.length();
+    	int len = p.length();
 
-	if (len <= SHORT_PEPTIDE)
-	{
-		total /= sqrt((double) len);
-
-		// normalise so that all score types have approximately the same range
-		total *= 60.0;
-	}
-	else
-	{
-		// normalise so that all score types have approximately the same range
-		total *= 2.7;
-	}
-
-#endif // RAW_SCORE
+	    if (len <= SHORT_PEPTIDE || continuous)
+    	{
+	    	total /= sqrt((double) len);
+    
+		    // normalise so that all score types have approximately the same range
+	    	total *= 60.0;
+	    }
+	    else
+    	{
+		    // normalise so that all score types have approximately the same range
+	    	total *= 2.7;
+	    }   
+    }
 
 	return total;
 }
