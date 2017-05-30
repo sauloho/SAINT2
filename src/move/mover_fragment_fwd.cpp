@@ -56,10 +56,12 @@ Fragment *Mover_Fragment_Fwd::random_fragment(int max_end_pos, int *end_pos)
 		}
 
 		*end_pos = rand() % num_possible + *p_m_build_from_pos;
+		std::cout << "MOVE LOCATION:\t" << *end_pos << "\n";
 		num = (int) m_fragment[*end_pos].size();
 	} while (num == 0);
 
 	int n = m_frag_distrib[*end_pos].select();
+	std::cout << "MOVE FRAGLENG:\t" << m_fragment[*end_pos][n].length() << "\nMOVE FRAGMENT:\t" << n << "\n";
 	return &(m_fragment[*end_pos][n]);
 }
 

@@ -394,6 +394,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 				m_curr_score = candidate_score[choice];
 				m_move_failed = false;
 				m_no_sel_count = 0;
+				std::cout << "MOVE ACCEPTED:\t1\n";
 				//sprintf(pdb_out,"Test%5d.pdb",template_count);
 				//if(template_count % 2 == 0)
 				//{
@@ -414,6 +415,7 @@ void Runner::do_runs(Sequence &seq, Run_Observer &observer)
 			else   // no candidate selected
 			{
 				m_move_failed = true;
+				std::cout << "MOVE ACCEPTED:\t0\n";
 				m_no_sel_count++;
 			}
 

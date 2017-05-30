@@ -44,6 +44,17 @@ then
 	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
 	#rm $OUTPATH/$FILE.cut
 	
+	ERRFILE=$OUTPATH/err_${HOST}_$PID
+	paste <(grep -e "^MOVE LOCATION:" $ERRFILE | cut -f 2) \
+		<(grep -e "^MOVE FRAGMENT:" $ERRFILE | cut -f 2) \
+		<(grep -e "^MOVE FRAGLENG:" $ERRFILE | cut -f 2) \
+		<(grep -e "^MOVE ACCEPTED:" $ERRFILE | cut -f 2) \
+		> $OUTPATH/moves_$PID
+	grep -ve "^MOVE " $ERRFILE > $OUTPATH/err_${HOST}_$PID.temp
+	if [ "$?" = "0" ]; then
+		mv $OUTPATH/err_${HOST}_$PID.temp $OUTPATH/err_${HOST}_$PID
+	fi
+
 	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
 	#for FRAC in perc part; do
@@ -112,6 +123,17 @@ then
 	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
 	#rm $OUTPATH/$FILE.cut
 	
+	ERRFILE=$OUTPATH/err_${HOST}_$PID
+	paste <(grep -e "^MOVE LOCATION:" $ERRFILE | cut -f 2) \
+		<(grep -e "^MOVE FRAGMENT:" $ERRFILE | cut -f 2) \
+		<(grep -e "^MOVE FRAGLENG:" $ERRFILE | cut -f 2) \
+		<(grep -e "^MOVE ACCEPTED:" $ERRFILE | cut -f 2) \
+		> $OUTPATH/moves_$PID
+	grep -ve "^MOVE " $ERRFILE > $OUTPATH/err_${HOST}_$PID.temp
+	if [ "$?" = "0" ]; then
+		mv $OUTPATH/err_${HOST}_$PID.temp $OUTPATH/err_${HOST}_$PID
+	fi
+
 	rm -f $OUTPATH/scmatrix*
 	# Package up the part and perc files into MODELs
 	#for FRAC in perc part; do
