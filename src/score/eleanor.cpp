@@ -161,9 +161,9 @@ double Eleanor::score(const Peptide& p, bool verbose)
 
 	// Alter the score so that it has about the same distribution
 	// for all lengths
-	//total /= sqrt((double) len);
+	total /= len;
 	// normalise so that all score types have approximately the same range
-	//total = total * 28.0;
+	total = total * 1000;
 	
 #endif // RAW_SCORE
 //	std::cout << "Total = " << total << " !!\n";	

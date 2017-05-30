@@ -360,11 +360,11 @@ echo "short_predtor_file = $datadir2/$id.spXout" >> $name
 echo >> $name
 
 echo "long_weight_rapdf       = 0.303" >> $name
-echo "long_weight_solvation   = 0.282" >> $name
+echo "long_weight_solvation   = 0" >> $name
 echo "long_weight_lj          = 0.304" >> $name
 echo "long_weight_hbond       = 0" >> $name
 echo "long_weight_saulo       = 1" >> $name
-echo "long_weight_eleanor     = 1" >> $name
+echo "long_weight_eleanor     = 0.5" >> $name
 echo "long_weight_core        = 1" >> $name
 echo "long_weight_predss      = 0" >> $name
 echo "long_weight_rgyr        = 0" >> $name
@@ -377,11 +377,11 @@ echo "long_weight_predtor     = 0" >> $name
 echo >> $name
 
 echo "short_weight_rapdf       = 0.156" >> $name
-echo "short_weight_solvation   = 0.262" >> $name
+echo "short_weight_solvation   = 0" >> $name
 echo "short_weight_lj          = 0.505" >> $name
 echo "short_weight_hbond       = 0" >> $name
 echo "short_weight_saulo       = 1" >> $name
-echo "short_weight_eleanor     = 1" >> $name
+echo "short_weight_eleanor     = 0.5" >> $name
 echo "short_weight_core        = 1" >> $name
 echo "short_weight_predss      = 0" >> $name
 echo "short_weight_rgyr        = 0" >> $name

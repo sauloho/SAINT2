@@ -55,10 +55,12 @@ Fragment *Mover_Fragment_Rev::random_fragment(int min_start_pos, int *start_pos)
 		}
 
 		*start_pos = rand() % num_possible + min_start_pos;
+		std::cout << "MOVE LOCATION:\t" << *start_pos << "\n";
 		num = (int) m_fragment[*start_pos].size();
 	} while (num == 0);
 
 	int n = m_frag_distrib[*start_pos].select();
+	std::cout << "MOVE FRAGLENG:\t" << m_fragment[*start_pos][n].length() << "\nMOVE FRAGMENT:\t" << n << "\n";
 	return &(m_fragment[*start_pos][n]);
 }
 
