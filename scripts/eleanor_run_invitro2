@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [ -z "$SAINT2" ]
 then
 	echo "$0: Please define the variable SAINT2 as the base Saint 2 directory (one up from the \"bin\" directory), eg:
@@ -23,6 +25,7 @@ fi
 runs="$1"
 id="$2"
 shift; shift
+HOST=`hostname`
 
 if echo "$runs" | grep -q -v '^[0-9][0-9]*$'
 then
@@ -48,30 +51,26 @@ fi
 
 out_prefix=`echo $config | sed 's/^config_//g'`
 
-if [ ! -d $out_prefix ]
+if [ ! -d $out_prefix/$HOST ]
 then
-	mkdir $out_prefix
+	mkdir -p $out_prefix/$HOST
 fi
 
-cd $out_prefix > /dev/null
+cd $out_prefix/$HOST > /dev/null
 
-i=0
-while [ \( -f err_s${i} \) -o \( -f ${out_prefix}_s$i \) ] ;
-do
-        i=`expr $i + 1`
-done
 
 # SILENT MODE:
 SILENT=0;
 if [ $SILENT -eq "1" ]; then
-        err="/dev/null"
+	err="/dev/null"
 else
-        err="err_$HOST_pid$$"
+	err="err_${HOST}_$$"
 fi
 
+
 while [ $runs -gt 0 ] ; do
-	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../$config -n 1 -s $i -o ${out_prefix}_s${i}_r$runs_p$$
+	$SAINT2/bin/do_cmd_outfile $err $SAINT2/bin/saint2 ../../$config -n 1 -s $$ -o ${out_prefix}_${HOST}_$$
 	runs=`expr $runs - 1`
 done
-runs=`expr $runs + 1`
-echo ${out_prefix}_s${i}_r$runs_p$$
+
+echo ${out_prefix}_${HOST}_$$
