@@ -930,7 +930,7 @@ inline bool outside_length_tolerance(double dist, double ideal_dist)
 
 inline bool outside_angle_tolerance(double angle, double ideal_angle)
 {
-	static const double AngleTolerance = deg2rad(20.0);
+	static const double AngleTolerance = deg2rad(30.0);
 
 	return (fabs(angle - ideal_angle) > AngleTolerance);
 }
