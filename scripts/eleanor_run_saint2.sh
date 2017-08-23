@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #export SAINT2=$HOME/saint2_orig/
+SCORING=false
 OUTPUT=$1
 METHODS=$2
 cd $3 > /dev/null
@@ -13,7 +14,12 @@ GROWTH_MOVES=`bc <<< "10000*($LENGTH-$SEGMENT_LENGTH)^2/($LENGTH)^2"`
 MOVES=`bc <<< "1000*($LENGTH-$SEGMENT_LENGTH)/$LENGTH"`
 #SNAPSHOTS=$5
 HOST=`hostname`
-mkdir -p $HOST/$OUTPUT
+
+if [ $SCORING = true ]
+then
+	mkdir -p $HOST/$OUTPUT
+fi
+
 if [[ $METHODS =~ c ]]
 then
 	#COTRANS
@@ -39,10 +45,13 @@ then
 	### get the scores of the final decoy that has been generated ###
 	#TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
 
-	# get the TM score of the non-segment part against the non-segment part of the pdb
-	TMCUT=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
-	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
-	#rm $OUTPATH/$FILE.cut
+	if [ $SCORING = true ]
+	then
+		# get the TM score of the non-segment part against the non-segment part of the pdb
+		TMCUT=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+		TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+		#rm $OUTPATH/$FILE.cut
+	fi
 	
 	ERRFILE=$OUTPATH/err_${HOST}_$PID
 	paste <(grep -e "^MOVE LOCATION:" $ERRFILE | cut -f 2) \
@@ -69,29 +78,32 @@ then
 	#	done
 	#done
 
-	# score the decoy using the scoring or running config file
-	#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
-	$SAINT2/bin/saint2 config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
-	if [ "$?" = "0" ]; then
-		SOLV=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Solvation =/ { print $NF; }'`
-		ORIE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Orientation =/ { print $NF; }'`
-		LJ=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Lennard-Jones =/ { print $NF; }'`
-		RAPDF=`cat $HOST/$OUTPUT/temp_$$ | awk '/^RAPDF =/ { print $NF; }'`
-		CORE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^CORE =/ { print $NF; }'`
-		PREDSS=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredSS =/ { print $NF; }'`
-		SAULO=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Saulo =/ { print $NF; }'`
-		ELEANOR=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Eleanor =/ { print $NF; }'`
-		COMB=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Combined score =/ { print $NF; }'`
-		RG=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Radius of gyration =/ { print $NF; }'`
-		DIAM=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Diameter =/ { print $NF; }'`
-		TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
-		if [ -n "$TM" ]; then
-			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
-			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
-			echo $TM $TMCUT $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
+	if [ $SCORING = true ]
+	then
+		# score the decoy using the scoring or running config file
+		#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
+		$SAINT2/bin/saint2 config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
+		if [ "$?" = "0" ]; then
+			SOLV=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Solvation =/ { print $NF; }'`
+			ORIE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Orientation =/ { print $NF; }'`
+			LJ=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Lennard-Jones =/ { print $NF; }'`
+			RAPDF=`cat $HOST/$OUTPUT/temp_$$ | awk '/^RAPDF =/ { print $NF; }'`
+			CORE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^CORE =/ { print $NF; }'`
+			PREDSS=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredSS =/ { print $NF; }'`
+			SAULO=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Saulo =/ { print $NF; }'`
+			ELEANOR=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Eleanor =/ { print $NF; }'`
+			COMB=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Combined score =/ { print $NF; }'`
+			RG=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Radius of gyration =/ { print $NF; }'`
+			DIAM=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Diameter =/ { print $NF; }'`
+			TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
+			if [ -n "$TM" ]; then
+				#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
+				#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
+				echo $TM $TMCUT $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_cotrans_$PID.txt
+			fi
 		fi
+		rm $HOST/$OUTPUT/temp_$$
 	fi
-	rm $HOST/$OUTPUT/temp_$$
 fi
 
 if [[ $METHODS =~ v ]]
@@ -119,9 +131,13 @@ then
 	### get the scores of the final decoy that has been generated ###
 	#TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
 	
-	# get the TM score of the non-segment part against the non-segment part of the pdb
-	TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
-	#rm $OUTPATH/$FILE.cut
+	if [ $SCORING = true ]
+	then
+		# get the TM score of the non-segment part against the non-segment part of the pdb
+		TMCUT=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE.cut $CUTPDB | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+		TM=$($SAINT2/3rdparty/TMalign $OUTPATH/$FILE $DATA_PATH/$OUTPUT.pdb | grep -m 1 TM-score= | awk '{ printf "%f",$2; }')
+		#rm $OUTPATH/$FILE.cut
+	fi
 	
 	ERRFILE=$OUTPATH/err_${HOST}_$PID
 	paste <(grep -e "^MOVE LOCATION:" $ERRFILE | cut -f 2) \
@@ -148,29 +164,32 @@ then
 	#	done
 	#done
 
-	# score the decoy using the scoring or running config file
-	#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
-	$SAINT2/bin/saint2 config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear_rev -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
-	if [ "$?" = "0" ]; then
-		SOLV=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Solvation =/ { print $NF; }'`
-		ORIE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Orientation =/ { print $NF; }'`
-		LJ=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Lennard-Jones =/ { print $NF; }'`
-		RAPDF=`cat $HOST/$OUTPUT/temp_$$ | awk '/^RAPDF =/ { print $NF; }'`
-		CORE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^CORE =/ { print $NF; }'`
-		PREDSS=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredSS =/ { print $NF; }'`
-		SAULO=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Saulo =/ { print $NF; }'`
-		ELEANOR=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Eleanor =/ { print $NF; }'`
-		COMB=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Combined score =/ { print $NF; }'`
-		RG=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Radius of gyration =/ { print $NF; }'`
-		DIAM=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Diameter =/ { print $NF; }'`
-		TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
-		if [ -n "$TM" ]; then
-			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
-			#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$PID.txt
-			echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$PID.txt
+	if [ $SCORING = true ]
+	then
+		# score the decoy using the scoring or running config file
+		#$SAINT2/bin/saint2 $DATA_PATH/config_${OUTPUT}_scoring -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
+		$SAINT2/bin/saint2 config_${OUTPUT}_c_n*_Seg${SEGMENT_LENGTH}_linear_rev -- $OUTPATH/$FILE > $HOST/$OUTPUT/temp_$$
+		if [ "$?" = "0" ]; then
+			SOLV=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Solvation =/ { print $NF; }'`
+			ORIE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Orientation =/ { print $NF; }'`
+			LJ=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Lennard-Jones =/ { print $NF; }'`
+			RAPDF=`cat $HOST/$OUTPUT/temp_$$ | awk '/^RAPDF =/ { print $NF; }'`
+			CORE=`cat $HOST/$OUTPUT/temp_$$ | awk '/^CORE =/ { print $NF; }'`
+			PREDSS=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredSS =/ { print $NF; }'`
+			SAULO=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Saulo =/ { print $NF; }'`
+			ELEANOR=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Eleanor =/ { print $NF; }'`
+			COMB=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Combined score =/ { print $NF; }'`
+			RG=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Radius of gyration =/ { print $NF; }'`
+			DIAM=`cat $HOST/$OUTPUT/temp_$$ | awk '/^Diameter =/ { print $NF; }'`
+			TORSION=`cat $HOST/$OUTPUT/temp_$$ | awk '/^PredTor =/ { print $NF; }'`
+			if [ -n "$TM" ]; then
+				#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $PREDSS $SAULO $ELEANOR $RG $DIAM $TORSION $COMB >> $HOST/$OUTPUT/scores_cotrans_$$.txt
+				#echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $ELEANOR $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$PID.txt
+				echo $TM $FILE $SOLV $ORIE $RAPDF $LJ $CORE $SAULO $RG $DIAM $COMB >> $HOST/$OUTPUT/scores_reverse_$PID.txt
+			fi
 		fi
+		rm $HOST/$OUTPUT/temp_$$
 	fi
-	rm $HOST/$OUTPUT/temp_$$
 fi
 
 if [[ $METHODS =~ r ]]
