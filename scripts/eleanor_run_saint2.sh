@@ -10,9 +10,15 @@ cd - > /dev/null
 SEGMENT_LENGTH=$4
 LENGTH=`cat $DATA_PATH/$OUTPUT.length | tr -d '\n'`
 INITIAL_LENGTH=9
-GROWTH_MOVES=`bc <<< "10000*($LENGTH-$SEGMENT_LENGTH)^2/($LENGTH)^2"`
-MOVES=`bc <<< "1000*($LENGTH-$SEGMENT_LENGTH)/$LENGTH"`
-#SNAPSHOTS=$5
+if [ "$5" == "relative_adjust" ]
+then
+	GROWTH_MOVES=`bc <<< "10000*($LENGTH-$SEGMENT_LENGTH)^2/($LENGTH)^2"`
+	MOVES=`bc <<< "1000*($LENGTH-$SEGMENT_LENGTH)/$LENGTH"`
+else
+	GROWTH_MOVES=`bc <<< "10000*($LENGTH-$SEGMENT_LENGTH)^2/(150)^2"`
+	MOVES=`bc <<< "1000*($LENGTH-$SEGMENT_LENGTH)/150"`
+fi
+#SNAPSHOTS=$6
 HOST=`hostname`
 
 if [ $SCORING = true ]
